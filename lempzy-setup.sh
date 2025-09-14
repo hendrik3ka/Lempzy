@@ -158,15 +158,59 @@ else
 fi
 
 # Install MariaDB
+echo "${grn}=== MARIADB VERSION SELECTION ===${end}"
+echo "${yel}Choose your preferred MariaDB version:${end}"
+echo "${blu}1) MariaDB 10.11 (LTS) ${grn}[DEFAULT - RECOMMENDED]${end}${end}"
+echo "${blu}2) MariaDB 11.4 (LTS - Latest)${end}"
+echo "${blu}3) MariaDB 10.1 (Legacy - EOL)${end}"
+echo ""
+mariadb_choice=$(countdown_input "${cyn}Enter your choice (1-3): ${end}" "1")
+
+# Set MariaDB version based on user choice
+case $mariadb_choice in
+    1)
+        SELECTED_MARIADB_VERSION="10.11"
+        echo "${grn}Selected MariaDB 10.11 (LTS)${end}"
+        ;;
+    2)
+        SELECTED_MARIADB_VERSION="11.4"
+        echo "${grn}Selected MariaDB 11.4 (LTS)${end}"
+        ;;
+    3)
+        SELECTED_MARIADB_VERSION="10.1"
+        echo "${yel}Warning: MariaDB 10.1 is End-of-Life (EOL) and no longer receives security updates${end}"
+        echo "${grn}Selected MariaDB 10.1 (Legacy)${end}"
+        ;;
+    *)
+        echo "${red}Invalid choice. Using default MariaDB 10.11...${end}"
+        SELECTED_MARIADB_VERSION="10.11"
+        ;;
+esac
+
 INSTALL_MARIADB=scripts/install/install_mariadb.sh
 
-if test -f "$INSTALL_MARIADB"; then
-     source $INSTALL_MARIADB
-     cd && cd Lempzy
+# Check if MariaDB is already installed
+if check_command_exists "mysql" || check_package_installed "mariadb-server"; then
+    echo "${grn}MariaDB is already installed, skipping...${end}"
 else
-     echo "${red}Cannot Install MariaDB${end}"
-     exit
+    if test -f "$INSTALL_MARIADB"; then
+        echo "${grn}Installing MariaDB $SELECTED_MARIADB_VERSION...${end}"
+        # Export the selected MariaDB version for the install script to use
+        export SELECTED_MARIADB_VERSION
+        if source "$INSTALL_MARIADB"; then
+            echo "${grn}MariaDB installed successfully${end}"
+        else
+            add_failed_installation "MariaDB"
+        fi
+        # Return to the script directory
+        cd "$(dirname "$0")"
+    else
+        echo "${red}Cannot find MariaDB installation script${end}"
+        add_failed_installation "MariaDB (script not found)"
+    fi
 fi
+
+echo ""
 
 # Install PHP And Configure PHP
 echo "${grn}=== PHP VERSION SELECTION ===${end}"
