@@ -61,7 +61,7 @@ get_script_directory() {
     done
     
     # Method 4: Check common installation locations
-    for possible_dir in "/root/Lempzy" "/home/*/Lempzy" "/opt/lempzy" "/usr/local/lempzy"; do
+    for possible_dir in "/root/Lempzy" "/home/*/Lempzy" "/opt/Lempzy" "/usr/local/Lempzy"; do
         if [ -d "$possible_dir/scripts" ] && [ -f "$possible_dir/lempzy-setup.sh" ]; then
             echo "$possible_dir"
             return 0
@@ -211,7 +211,7 @@ echo "**************************************************************************
 echo ""
 
 # Update os
-UPDATE_OS=$SCRIPT_DIR/scripts/install/update_os.sh
+UPDATE_OS=$(pwd)/scripts/install/update_os.sh
 
 if execute_install_script "$UPDATE_OS"; then
      echo "${grn}OS update completed${end}"
@@ -221,7 +221,7 @@ else
 fi
 
 # Installing UFW Firewall
-INSTALL_UFW_FIREWALL=$SCRIPT_DIR/scripts/install/install_firewall.sh
+INSTALL_UFW_FIREWALL=$(pwd)/scripts/install/install_firewall.sh
 
 if execute_install_script "$INSTALL_UFW_FIREWALL"; then
      echo "${grn}UFW Firewall installed successfully${end}"
@@ -262,7 +262,7 @@ case $mariadb_choice in
         ;;
 esac
 
-INSTALL_MARIADB=$SCRIPT_DIR/scripts/install/install_mariadb.sh
+INSTALL_MARIADB=$(pwd)/scripts/install/install_mariadb.sh
 
 # Check if MariaDB is already installed
 if check_command_exists "mysql" || check_package_installed "mariadb-server"; then
@@ -331,7 +331,7 @@ case $php_choice in
         ;;
 esac
 
-INSTALL_PHP=$SCRIPT_DIR/scripts/install/install_php.sh
+INSTALL_PHP=$(pwd)/scripts/install/install_php.sh
 
 # Check if PHP is already installed
 if check_command_exists "php"; then
@@ -356,7 +356,7 @@ fi
 echo ""
 
 # Install, Start, And Configure nginx
-INSTALL_NGINX=$SCRIPT_DIR/scripts/install/install_nginx.sh
+INSTALL_NGINX=$(pwd)/scripts/install/install_nginx.sh
 
 if execute_install_script "$INSTALL_NGINX"; then
      echo "${grn}Nginx installed successfully${end}"
@@ -380,7 +380,7 @@ cache_choice=$(echo "$cache_choice" | tr -d '[:space:]')
 case $cache_choice in
     "1")
         echo "${grn}Installing Memcached...${end}"
-        INSTALL_MEMCACHED=$SCRIPT_DIR/scripts/install/install_memcached.sh
+        INSTALL_MEMCACHED=$(pwd)/scripts/install/install_memcached.sh
         
         # Check if memcached is already installed
         if check_package_installed "memcached" || check_command_exists "memcached"; then
@@ -404,18 +404,18 @@ case $cache_choice in
         
         # Debug information
         echo "${yel}DEBUG: SCRIPT_DIR = '$SCRIPT_DIR'${end}"
-        echo "${yel}DEBUG: Current working directory = '$(pwd)'${end}"
+        echo "${yel}DEBUG: Current working directory = ''${end}"
         
-        INSTALL_REDIS=$SCRIPT_DIR/scripts/install/install_redis.sh
+        INSTALL_REDIS=$(pwd)/scripts/install/install_redis.sh
         echo "${yel}DEBUG: INSTALL_REDIS path = '$INSTALL_REDIS'${end}"
         echo "${yel}DEBUG: File exists check: $(test -f "$INSTALL_REDIS" && echo 'YES' || echo 'NO')${end}"
         
         # List contents of scripts/install directory for debugging
-        if [ -d "$SCRIPT_DIR/scripts/install" ]; then
-            echo "${yel}DEBUG: Contents of $SCRIPT_DIR/scripts/install/:${end}"
-            ls -la "$SCRIPT_DIR/scripts/install/" | head -10
+        if [ -d "$(pwd)/scripts/install" ]; then
+            echo "${yel}DEBUG: Contents of $(pwd)/install/:${end}"
+            ls -la "$(pwd)/scripts/install/" | head -10
         else
-            echo "${yel}DEBUG: Directory $SCRIPT_DIR/scripts/install/ does not exist${end}"
+            echo "${yel}DEBUG: Directory $(pwd)/install/ does not exist${end}"
         fi
         
         # Check if redis is already installed
@@ -441,7 +441,7 @@ case $cache_choice in
         echo "${grn}Installing both Memcached and Redis...${end}"
         
         # Install Memcached
-        INSTALL_MEMCACHED=$SCRIPT_DIR/scripts/install/install_memcached.sh
+        INSTALL_MEMCACHED=$(pwd)/scripts/install/install_memcached.sh
         if check_package_installed "memcached" || check_command_exists "memcached"; then
             echo "${grn}Memcached is already installed, skipping...${end}"
         else
@@ -460,7 +460,7 @@ case $cache_choice in
         fi
         
         # Install Redis
-        INSTALL_REDIS=$SCRIPT_DIR/scripts/install/install_redis.sh
+        INSTALL_REDIS=$(pwd)/scripts/install/install_redis.sh
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
             echo "${grn}Redis is already installed, skipping...${end}"
         else
@@ -489,7 +489,7 @@ esac
 echo ""
 
 # Install Ioncube
-INSTALL_IONCUBE=$SCRIPT_DIR/scripts/install/install_ioncube.sh
+INSTALL_IONCUBE=$(pwd)/scripts/install/install_ioncube.sh
 
 # Check if ioncube is already installed (check for ioncube loader in PHP)
 if php -m 2>/dev/null | grep -q "ionCube"; then
@@ -514,7 +514,7 @@ fi
 # For legacy applications requiring mcrypt, consider using mcrypt_compat library
 
 # Install HTOP
-INSTALL_HTOP=$SCRIPT_DIR/scripts/install/install_htop.sh
+INSTALL_HTOP=$(pwd)/scripts/install/install_htop.sh
 
 # Check if htop is already installed
 if check_command_exists "htop" || check_package_installed "htop"; then
@@ -535,7 +535,7 @@ else
 fi
 
 # Install Netstat
-INSTALL_NETSTAT=$SCRIPT_DIR/scripts/install/install_netstat.sh
+INSTALL_NETSTAT=$(pwd)/scripts/install/install_netstat.sh
 
 # Check if netstat is already installed
 if check_command_exists "netstat" || check_package_installed "net-tools"; then
@@ -570,7 +570,7 @@ ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
 case $ssl_choice in
     "1")
         echo "${grn}Installing OpenSSL...${end}"
-        INSTALL_OPENSSL=$SCRIPT_DIR/scripts/install/install_openssl.sh
+        INSTALL_OPENSSL=$(pwd)/scripts/install/install_openssl.sh
         
         # Check if openssl is already installed
         # if check_command_exists "openssl" || check_package_installed "openssl"; then
@@ -591,7 +591,7 @@ case $ssl_choice in
         ;;
     "2")
         echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
-        INSTALL_LETSENCRYPT=$SCRIPT_DIR/scripts/install/install_letsencrypt.sh
+        INSTALL_LETSENCRYPT=$(pwd)/scripts/install/install_letsencrypt.sh
         
         # Check if certbot is already installed
         if check_command_exists "certbot"; then
@@ -614,7 +614,7 @@ case $ssl_choice in
         echo "${grn}Installing both OpenSSL and Let's Encrypt...${end}"
         
         # Install OpenSSL
-        INSTALL_OPENSSL=$SCRIPT_DIR/scripts/install/install_openssl.sh
+        INSTALL_OPENSSL=$(pwd)/scripts/install/install_openssl.sh
         if check_command_exists "openssl" || check_package_installed "openssl"; then
             echo "${grn}OpenSSL is already installed, skipping...${end}"
         else
@@ -633,7 +633,7 @@ case $ssl_choice in
         fi
         
         # Install Let's Encrypt
-        INSTALL_LETSENCRYPT=$SCRIPT_DIR/scripts/install/install_letsencrypt.sh
+        INSTALL_LETSENCRYPT=$(pwd)/scripts/install/install_letsencrypt.sh
         if check_command_exists "certbot"; then
             echo "${grn}Let's Encrypt (Certbot) is already installed, skipping...${end}"
         else
@@ -662,7 +662,7 @@ esac
 echo ""
 
 # Install AB BENCHMARKING TOOL
-INSTALL_AB=$SCRIPT_DIR/scripts/install/install_ab.sh
+INSTALL_AB=$(pwd)/scripts/install/install_ab.sh
 
 # Check if ab (Apache Bench) is already installed
 if check_command_exists "ab" || check_package_installed "apache2-utils"; then
@@ -683,7 +683,7 @@ else
 fi
 
 # Install ZIP AND UNZIP
-INSTALL_ZIPS=$SCRIPT_DIR/scripts/install/install_zips.sh
+INSTALL_ZIPS=$(pwd)/scripts/install/install_zips.sh
 
 # Check if zip and unzip are already installed
 if check_command_exists "zip" && check_command_exists "unzip"; then
@@ -704,7 +704,7 @@ else
 fi
 
 # Install FFMPEG and IMAGEMAGICK
-INSTALL_FFMPEG=$SCRIPT_DIR/scripts/install/install_ffmpeg.sh
+INSTALL_FFMPEG=$(pwd)/scripts/install/install_ffmpeg.sh
 
 # Check if ffmpeg and imagemagick are already installed
 if check_command_exists "ffmpeg" && check_command_exists "convert"; then
@@ -725,7 +725,7 @@ else
 fi
 
 # Install Git And Curl
-INSTALL_GIT=$SCRIPT_DIR/scripts/install/install_git.sh
+INSTALL_GIT=$(pwd)/scripts/install/install_git.sh
 
 # Check if git and curl are already installed
 if check_command_exists "git" && check_command_exists "curl"; then
@@ -746,7 +746,7 @@ else
 fi
 
 # Install Composer
-INSTALL_COMPOSER=$SCRIPT_DIR/scripts/install/install_composer.sh
+INSTALL_COMPOSER=$(pwd)/scripts/install/install_composer.sh
 
 # Check if composer is already installed
 if check_command_exists "composer"; then
