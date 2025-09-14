@@ -213,7 +213,7 @@ else
             add_failed_installation "MariaDB"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find MariaDB installation script${end}"
         add_failed_installation "MariaDB (script not found)"
@@ -285,7 +285,7 @@ else
             add_failed_installation "PHP"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find PHP installation script${end}"
         add_failed_installation "PHP (script not found)"
@@ -337,7 +337,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Memcached"
                 fi
-                cd "$(dirname "$0")"
+                cd && cd Lempzy
             else
                 echo "${red}Cannot find Memcached installation script${end}"
                 add_failed_installation "Memcached (script not found)"
@@ -358,7 +358,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Redis"
                 fi
-                cd "$(dirname "$0")"
+                cd && cd Lempzy
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
@@ -380,7 +380,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Memcached"
                 fi
-                cd "$(dirname "$0")"
+                cd && cd Lempzy
             else
                 echo "${red}Cannot find Memcached installation script${end}"
                 add_failed_installation "Memcached (script not found)"
@@ -399,7 +399,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Redis"
                 fi
-                cd "$(dirname "$0")"
+                cd && cd Lempzy
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
@@ -431,7 +431,7 @@ else
             add_failed_installation "Ioncube"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find Ioncube installation script${end}"
         add_failed_installation "Ioncube (script not found)"
@@ -457,7 +457,7 @@ else
             add_failed_installation "HTOP"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find HTOP installation script${end}"
         add_failed_installation "HTOP (script not found)"
@@ -479,7 +479,7 @@ else
             add_failed_installation "Netstat"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find Netstat installation script${end}"
         add_failed_installation "Netstat (script not found)"
@@ -509,7 +509,7 @@ case $ssl_choice in
             else
                 add_failed_installation "OpenSSL"
             fi
-            cd "$(dirname "$0")"
+            cd && cd Lempzy
         else
             echo "${red}Cannot find OpenSSL installation script${end}"
             add_failed_installation "OpenSSL (script not found)"
@@ -530,7 +530,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "Let's Encrypt"
                 fi
-                cd "$(dirname "$0")"
+                cd && cd Lempzy
             else
                 echo "${red}Cannot find Let's Encrypt installation script${end}"
                 add_failed_installation "Let's Encrypt (script not found)"
@@ -549,7 +549,7 @@ case $ssl_choice in
             else
                 add_failed_installation "OpenSSL"
             fi
-            cd "$(dirname "$0")"
+            cd && cd Lempzy
         else
             echo "${red}Cannot find OpenSSL installation script${end}"
             add_failed_installation "OpenSSL (script not found)"
@@ -567,7 +567,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "Let's Encrypt"
                 fi
-                cd "$(dirname "$0")"
+                cd && cd Lempzy
             else
                 echo "${red}Cannot find Let's Encrypt installation script${end}"
                 add_failed_installation "Let's Encrypt (script not found)"
@@ -599,7 +599,7 @@ else
             add_failed_installation "AB Benchmarking Tool"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find AB installation script${end}"
         add_failed_installation "AB Benchmarking Tool (script not found)"
@@ -621,7 +621,7 @@ else
             add_failed_installation "ZIP and UNZIP"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find ZIP installation script${end}"
         add_failed_installation "ZIP and UNZIP (script not found)"
@@ -643,7 +643,7 @@ else
             add_failed_installation "FFMPEG and ImageMagick"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find FFMPEG installation script${end}"
         add_failed_installation "FFMPEG and ImageMagick (script not found)"
@@ -665,7 +665,7 @@ else
             add_failed_installation "Git and Curl"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find Git installation script${end}"
         add_failed_installation "Git and Curl (script not found)"
@@ -687,7 +687,7 @@ else
             add_failed_installation "Composer"
         fi
         # Return to the script directory
-        cd "$(dirname "$0")"
+        cd && cd Lempzy
     else
         echo "${red}Cannot find Composer installation script${end}"
         add_failed_installation "Composer (script not found)"
