@@ -331,13 +331,29 @@ case $cache_choice in
         ;;
     "2")
         echo "${grn}Installing Redis...${end}"
+        
+        # Debug information
+        echo "${yel}DEBUG: SCRIPT_DIR = '$SCRIPT_DIR'${end}"
+        echo "${yel}DEBUG: Current working directory = '$(pwd)'${end}"
+        
         INSTALL_REDIS=$SCRIPT_DIR/scripts/install/install_redis.sh
+        echo "${yel}DEBUG: INSTALL_REDIS path = '$INSTALL_REDIS'${end}"
+        echo "${yel}DEBUG: File exists check: $(test -f "$INSTALL_REDIS" && echo 'YES' || echo 'NO')${end}"
+        
+        # List contents of scripts/install directory for debugging
+        if [ -d "$SCRIPT_DIR/scripts/install" ]; then
+            echo "${yel}DEBUG: Contents of $SCRIPT_DIR/scripts/install/:${end}"
+            ls -la "$SCRIPT_DIR/scripts/install/" | head -10
+        else
+            echo "${yel}DEBUG: Directory $SCRIPT_DIR/scripts/install/ does not exist${end}"
+        fi
         
         # Check if redis is already installed
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
             echo "${grn}Redis is already installed, skipping...${end}"
         else
             if test -f "$INSTALL_REDIS"; then
+                echo "${grn}DEBUG: Redis installation script found, executing...${end}"
                 if source "$INSTALL_REDIS"; then
                     echo "${grn}Redis installed successfully${end}"
                 else
@@ -346,6 +362,7 @@ case $cache_choice in
                 # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Redis installation script${end}"
+                echo "${red}DEBUG: Checked path: $INSTALL_REDIS${end}"
                 add_failed_installation "Redis (script not found)"
             fi
         fi
