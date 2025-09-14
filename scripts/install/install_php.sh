@@ -213,11 +213,32 @@ install_specific_php_version() {
      echo ""
      sleep 3
      
-     # Add Ondrej PHP repository for all versions
+     # Add PHP repository based on OS type
      apt-get update
      apt-get install -y software-properties-common
-     add-apt-repository -y ppa:ondrej/php
-     apt-get update
+     
+     # Get OS information
+     OS_ID=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+     OS_VERSION=$(lsb_release -rs)
+     
+     if [[ "$OS_ID" == "debian" ]]; then
+          # For Debian, use DEB.SURY.ORG repository
+          echo "${grn}Adding DEB.SURY.ORG PHP repository for Debian...${end}"
+          apt-get install -y lsb-release ca-certificates apt-transport-https software-properties-common gnupg2
+          
+          # Add GPG key
+          curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
+          
+          # Add repository
+          echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/sury-php.list
+          
+          apt-get update
+     else
+          # For Ubuntu, use Ondrej PPA
+          echo "${grn}Adding Ondrej PHP PPA for Ubuntu...${end}"
+          add-apt-repository -y ppa:ondrej/php
+          apt-get update
+     fi
      
      # Install the specific PHP version
      case $php_version in
