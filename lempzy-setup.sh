@@ -419,27 +419,9 @@ else
     fi
 fi
 
-# Install Mcrypt
-INSTALL_MCRPYT=scripts/install/install_mcrypt.sh
-
-# Check if mcrypt is already installed (check for mcrypt extension in PHP)
-if php -m 2>/dev/null | grep -q "mcrypt" || check_package_installed "php.*-mcrypt"; then
-    echo "${grn}Mcrypt is already installed, skipping...${end}"
-else
-    if test -f "$INSTALL_MCRPYT"; then
-        echo "${grn}Installing Mcrypt...${end}"
-        if source "$INSTALL_MCRPYT"; then
-            echo "${grn}Mcrypt installed successfully${end}"
-        else
-            add_failed_installation "Mcrypt"
-        fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
-    else
-        echo "${red}Cannot find Mcrypt installation script${end}"
-        add_failed_installation "Mcrypt (script not found)"
-    fi
-fi
+# Note: Mcrypt installation removed - deprecated since PHP 7.1, removed in PHP 7.2+
+# Modern PHP versions (8.0+) use OpenSSL or Sodium for encryption instead
+# For legacy applications requiring mcrypt, consider using mcrypt_compat library
 
 # Install HTOP
 INSTALL_HTOP=scripts/install/install_htop.sh
