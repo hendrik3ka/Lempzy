@@ -81,6 +81,33 @@ report_installation_summary() {
     echo ""
 }
 
+# Function to display countdown and get user input
+countdown_input() {
+    local prompt="$1"
+    local default_choice="$2"
+    local timeout=60
+    local choice=""
+    
+    echo "${yel}Auto-selecting default option in 60 seconds...${end}"
+    echo "${grn}Default: $default_choice${end}"
+    echo ""
+    
+    # Read input with timeout
+    if read -t $timeout -p "$prompt" choice; then
+        echo ""
+        if [ -z "$choice" ]; then
+            choice="$default_choice"
+            echo "${yel}No input provided, using default: $default_choice${end}"
+        fi
+    else
+        echo ""
+        choice="$default_choice"
+        echo "${yel}Timeout reached, using default: $default_choice${end}"
+    fi
+    
+    echo "$choice"
+}
+
 # To Ensure Correct Os Supported Version Is Use
 OS_VERSION=$(lsb_release -rs)
 if [[ "${OS_VERSION}" != "10" ]] && [[ "${OS_VERSION}" != "11" ]] && [[ "${OS_VERSION}" != "12" ]] && [[ "${OS_VERSION}" != "13" ]] && [[ "${OS_VERSION}" != "18.04" ]] && [[ "${OS_VERSION}" != "20.04" ]] && [[ "${OS_VERSION}" != "22.04" ]] && [[ "${OS_VERSION}" != "22.10" ]] && [[ "${OS_VERSION}" != "24.04" ]]; then
@@ -148,10 +175,10 @@ echo "${blu}1) PHP 7.4${end}"
 echo "${blu}2) PHP 8.0${end}"
 echo "${blu}3) PHP 8.1${end}"
 echo "${blu}4) PHP 8.2${end}"
-echo "${blu}5) PHP 8.3${end}"
-echo "${blu}6) Auto-detect based on OS (default behavior)${end}"
+echo "${blu}5) PHP 8.3 ${grn}[DEFAULT]${end}${end}"
+echo "${blu}6) Auto-detect based on OS${end}"
 echo ""
-read -p "${cyn}Enter your choice (1-6): ${end}" php_choice
+php_choice=$(countdown_input "${cyn}Enter your choice (1-6): ${end}" "5")
 
 # Set PHP version based on user choice
 case $php_choice in
@@ -226,11 +253,11 @@ fi
 echo "${grn}=== CACHING SOLUTION SELECTION ===${end}"
 echo "${yel}Choose your preferred caching solution:${end}"
 echo "${blu}1) Install Memcached only${end}"
-echo "${blu}2) Install Redis only${end}"
+echo "${blu}2) Install Redis only ${grn}[DEFAULT]${end}${end}"
 echo "${blu}3) Install both Memcached and Redis${end}"
 echo "${blu}4) Skip caching installation${end}"
 echo ""
-read -p "${cyn}Enter your choice (1-4): ${end}" cache_choice
+cache_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
 
 case $cache_choice in
     1)
@@ -414,27 +441,109 @@ else
     fi
 fi
 
-# Install OpenSSL
-INSTALL_OPENSSL=scripts/install/install_openssl.sh
+# Install SSL Solution (OpenSSL/Let's Encrypt)
+echo "${grn}=== SSL SOLUTION SELECTION ===${end}"
+echo "${yel}Choose your preferred SSL solution:${end}"
+echo "${blu}1) Install OpenSSL only${end}"
+echo "${blu}2) Install Let's Encrypt (Certbot) ${grn}[DEFAULT]${end}${end}"
+echo "${blu}3) Install both OpenSSL and Let's Encrypt${end}"
+echo "${blu}4) Skip SSL installation${end}"
+echo ""
+ssl_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
 
-# Check if openssl is already installed
-if check_command_exists "openssl" || check_package_installed "openssl"; then
-    echo "${grn}OpenSSL is already installed, skipping...${end}"
-else
-    if test -f "$INSTALL_OPENSSL"; then
+case $ssl_choice in
+    1)
         echo "${grn}Installing OpenSSL...${end}"
-        if source "$INSTALL_OPENSSL"; then
-            echo "${grn}OpenSSL installed successfully${end}"
+        INSTALL_OPENSSL=scripts/install/install_openssl.sh
+        
+        # Check if openssl is already installed
+        if check_command_exists "openssl" || check_package_installed "openssl"; then
+            echo "${grn}OpenSSL is already installed, skipping...${end}"
         else
-            add_failed_installation "OpenSSL"
+            if test -f "$INSTALL_OPENSSL"; then
+                if source "$INSTALL_OPENSSL"; then
+                    echo "${grn}OpenSSL installed successfully${end}"
+                else
+                    add_failed_installation "OpenSSL"
+                fi
+                cd "$(dirname "$0")"
+            else
+                echo "${red}Cannot find OpenSSL installation script${end}"
+                add_failed_installation "OpenSSL (script not found)"
+            fi
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
-    else
-        echo "${red}Cannot find OpenSSL installation script${end}"
-        add_failed_installation "OpenSSL (script not found)"
-    fi
-fi
+        ;;
+    2)
+        echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
+        INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
+        
+        # Check if certbot is already installed
+        if check_command_exists "certbot"; then
+            echo "${grn}Let's Encrypt (Certbot) is already installed, skipping...${end}"
+        else
+            if test -f "$INSTALL_LETSENCRYPT"; then
+                if source "$INSTALL_LETSENCRYPT"; then
+                    echo "${grn}Let's Encrypt installed successfully${end}"
+                else
+                    add_failed_installation "Let's Encrypt"
+                fi
+                cd "$(dirname "$0")"
+            else
+                echo "${red}Cannot find Let's Encrypt installation script${end}"
+                add_failed_installation "Let's Encrypt (script not found)"
+            fi
+        fi
+        ;;
+    3)
+        echo "${grn}Installing both OpenSSL and Let's Encrypt...${end}"
+        
+        # Install OpenSSL
+        INSTALL_OPENSSL=scripts/install/install_openssl.sh
+        if check_command_exists "openssl" || check_package_installed "openssl"; then
+            echo "${grn}OpenSSL is already installed, skipping...${end}"
+        else
+            if test -f "$INSTALL_OPENSSL"; then
+                echo "${grn}Installing OpenSSL...${end}"
+                if source "$INSTALL_OPENSSL"; then
+                    echo "${grn}OpenSSL installed successfully${end}"
+                else
+                    add_failed_installation "OpenSSL"
+                fi
+                cd "$(dirname "$0")"
+            else
+                echo "${red}Cannot find OpenSSL installation script${end}"
+                add_failed_installation "OpenSSL (script not found)"
+            fi
+        fi
+        
+        # Install Let's Encrypt
+        INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
+        if check_command_exists "certbot"; then
+            echo "${grn}Let's Encrypt (Certbot) is already installed, skipping...${end}"
+        else
+            if test -f "$INSTALL_LETSENCRYPT"; then
+                echo "${grn}Installing Let's Encrypt...${end}"
+                if source "$INSTALL_LETSENCRYPT"; then
+                    echo "${grn}Let's Encrypt installed successfully${end}"
+                else
+                    add_failed_installation "Let's Encrypt"
+                fi
+                cd "$(dirname "$0")"
+            else
+                echo "${red}Cannot find Let's Encrypt installation script${end}"
+                add_failed_installation "Let's Encrypt (script not found)"
+            fi
+        fi
+        ;;
+    4)
+        echo "${yel}Skipping SSL installation...${end}"
+        ;;
+    *)
+        echo "${red}Invalid choice. Skipping SSL installation...${end}"
+        ;;
+esac
+
+echo ""
 
 # Install AB BENCHMARKING TOOL
 INSTALL_AB=scripts/install/install_ab.sh
