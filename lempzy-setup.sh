@@ -154,7 +154,12 @@ INSTALL_UFW_FIREWALL=scripts/install/install_firewall.sh
 
 if test -f "$INSTALL_UFW_FIREWALL"; then
      source $INSTALL_UFW_FIREWALL
-     cd && cd Lempzy
+     if [ -d "$HOME/Lempzy" ]; then
+          cd && cd Lempzy
+     else
+          echo "${yel}Lempzy directory not found, staying in current directory${end}"
+          # Continue with script execution from current directory
+     fi
 else
      echo "${red}Cannot Install UFW Firewall${end}"
      exit
@@ -294,7 +299,12 @@ INSTALL_NGINX=scripts/install/install_nginx.sh
 
 if test -f "$INSTALL_NGINX"; then
      source $INSTALL_NGINX
-     cd && cd Lempzy
+     if [ -d "$HOME/Lempzy" ]; then
+          cd && cd Lempzy
+     else
+          echo "${yel}Lempzy directory not found, staying in current directory${end}"
+          # Continue with script execution from current directory
+     fi
 else
      echo "${red}Cannot Install Nginx${end}"
      exit
