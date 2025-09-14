@@ -26,53 +26,6 @@
 
 set -e
 
-# Get the directory where this script is located dynamically with robust path detection
-# This script is in the root of Lempzy, so SCRIPT_DIR should be the Lempzy root directory
-get_script_directory() {
-    local script_dir=""
-    
-    # Method 1: Use BASH_SOURCE[0] (most reliable)
-    if [ -n "${BASH_SOURCE[0]}" ]; then
-        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        # Verify this is actually the Lempzy root by checking for scripts directory
-        if [ -d "$script_dir/scripts" ] && [ -f "$script_dir/lempzy-setup.sh" ]; then
-            echo "$script_dir"
-            return 0
-        fi
-    fi
-    
-    # Method 2: Use $0 as fallback
-    if [ -n "$0" ]; then
-        script_dir="$(cd "$(dirname "$0")" && pwd)"
-        if [ -d "$script_dir/scripts" ] && [ -f "$script_dir/lempzy-setup.sh" ]; then
-            echo "$script_dir"
-            return 0
-        fi
-    fi
-    
-    # Method 3: Search upward from current directory
-    local current_dir="$(pwd)"
-    while [ "$current_dir" != "/" ]; do
-        if [ -d "$current_dir/scripts" ] && [ -f "$current_dir/lempzy-setup.sh" ]; then
-            echo "$current_dir"
-            return 0
-        fi
-        current_dir="$(dirname "$current_dir")"
-    done
-    
-    # Method 4: Check common installation locations
-    for possible_dir in "/root/Lempzy" "/home/*/Lempzy" "/opt/Lempzy" "/usr/local/Lempzy"; do
-        if [ -d "$possible_dir/scripts" ] && [ -f "$possible_dir/lempzy-setup.sh" ]; then
-            echo "$possible_dir"
-            return 0
-        fi
-    done
-    
-    # If all methods fail, return current directory as last resort
-    echo "$(pwd)"
-    return 1
-}
-
 # Colours
 red=$'\e[1;31m'
 grn=$'\e[1;32m'
@@ -81,37 +34,6 @@ blu=$'\e[1;34m'
 mag=$'\e[1;35m'
 cyn=$'\e[1;36m'
 end=$'\e[0m'
-
-SCRIPT_DIR="$(get_script_directory)"
-
-# Validate that we found the correct Lempzy directory
-if [ ! -d "$SCRIPT_DIR/scripts" ] || [ ! -f "$SCRIPT_DIR/lempzy-setup.sh" ]; then
-    echo "${red}Error: Could not locate Lempzy installation directory!${end}"
-    echo "${red}Detected path: $SCRIPT_DIR${end}"
-    echo "${red}Please ensure you're running this script from the Lempzy directory${end}"
-    exit 1
-else
-    echo "${grn}Lempzy installation directory detected: $SCRIPT_DIR${end}"
-fi
-
-# Helper function to execute installation scripts with proper directory context
-execute_install_script() {
-    local script_path="$1"
-    local original_dir="$(pwd)"
-    local exit_code=0
-    
-    if test -f "$script_path"; then
-        # Change to Lempzy directory before sourcing scripts to maintain compatibility
-        cd "$SCRIPT_DIR"
-        # Source the script and capture its exit code
-        source "$script_path" || exit_code=$?
-        # Return to original directory
-        cd "$original_dir"
-        return $exit_code
-    else
-        return 1
-    fi
-}
 
 # Array to track failed installations
 FAILED_INSTALLATIONS=()
@@ -211,20 +133,33 @@ echo "**************************************************************************
 echo ""
 
 # Update os
-UPDATE_OS=$(pwd)/scripts/install/update_os.sh
+UPDATE_OS=scripts/install/update_os.sh
 
-if execute_install_script "$UPDATE_OS"; then
-     echo "${grn}OS update completed${end}"
+if test -f "$UPDATE_OS"; then
+     source $UPDATE_OS
+     # Check if Lempzy directory exists before navigating to it
+     if [ -d "$HOME/Lempzy" ]; then
+          cd && cd && cd Lempzy
+     else
+          echo "${yel}Lempzy directory not found, staying in current directory${end}"
+          # Continue with script execution from current directory
+     fi
 else
      echo "${red}Cannot find OS update script, continuing without OS update${end}"
      # Continue script execution instead of exiting
 fi
 
 # Installing UFW Firewall
-INSTALL_UFW_FIREWALL=$(pwd)/scripts/install/install_firewall.sh
+INSTALL_UFW_FIREWALL=scripts/install/install_firewall.sh
 
-if execute_install_script "$INSTALL_UFW_FIREWALL"; then
-     echo "${grn}UFW Firewall installed successfully${end}"
+if test -f "$INSTALL_UFW_FIREWALL"; then
+     source $INSTALL_UFW_FIREWALL
+     if [ -d "$HOME/Lempzy" ]; then
+          cd && cd Lempzy
+     else
+          echo "${yel}Lempzy directory not found, staying in current directory${end}"
+          # Continue with script execution from current directory
+     fi
 else
      echo "${red}Cannot Install UFW Firewall${end}"
      exit
@@ -262,7 +197,7 @@ case $mariadb_choice in
         ;;
 esac
 
-INSTALL_MARIADB=$(pwd)/scripts/install/install_mariadb.sh
+INSTALL_MARIADB=scripts/install/install_mariadb.sh
 
 # Check if MariaDB is already installed
 if check_command_exists "mysql" || check_package_installed "mariadb-server"; then
@@ -272,11 +207,13 @@ else
         echo "${grn}Installing MariaDB $SELECTED_MARIADB_VERSION...${end}"
         # Export the selected MariaDB version for the install script to use
         export SELECTED_MARIADB_VERSION
-        if execute_install_script "$INSTALL_MARIADB"; then
+        if source "$INSTALL_MARIADB"; then
             echo "${grn}MariaDB installed successfully${end}"
         else
             add_failed_installation "MariaDB"
         fi
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find MariaDB installation script${end}"
         add_failed_installation "MariaDB (script not found)"
@@ -331,7 +268,7 @@ case $php_choice in
         ;;
 esac
 
-INSTALL_PHP=$(pwd)/scripts/install/install_php.sh
+INSTALL_PHP=scripts/install/install_php.sh
 
 # Check if PHP is already installed
 if check_command_exists "php"; then
@@ -342,11 +279,13 @@ else
         echo "${grn}Installing PHP...${end}"
         # Export the selected PHP version for the install script to use
         export SELECTED_PHP_VERSION
-        if execute_install_script "$INSTALL_PHP"; then
+        if source "$INSTALL_PHP"; then
             echo "${grn}PHP installed successfully${end}"
         else
             add_failed_installation "PHP"
         fi
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find PHP installation script${end}"
         add_failed_installation "PHP (script not found)"
@@ -356,10 +295,16 @@ fi
 echo ""
 
 # Install, Start, And Configure nginx
-INSTALL_NGINX=$(pwd)/scripts/install/install_nginx.sh
+INSTALL_NGINX=scripts/install/install_nginx.sh
 
-if execute_install_script "$INSTALL_NGINX"; then
-     echo "${grn}Nginx installed successfully${end}"
+if test -f "$INSTALL_NGINX"; then
+     source $INSTALL_NGINX
+     if [ -d "$HOME/Lempzy" ]; then
+          cd && cd Lempzy
+     else
+          echo "${yel}Lempzy directory not found, staying in current directory${end}"
+          # Continue with script execution from current directory
+     fi
 else
      echo "${red}Cannot Install Nginx${end}"
      exit
@@ -380,7 +325,7 @@ cache_choice=$(echo "$cache_choice" | tr -d '[:space:]')
 case $cache_choice in
     "1")
         echo "${grn}Installing Memcached...${end}"
-        INSTALL_MEMCACHED=$(pwd)/scripts/install/install_memcached.sh
+        INSTALL_MEMCACHED=scripts/install/install_memcached.sh
         
         # Check if memcached is already installed
         if check_package_installed "memcached" || check_command_exists "memcached"; then
@@ -392,7 +337,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Memcached"
                 fi
-                # No need to change directories since we use absolute paths
+                cd "$(dirname "$0")"
             else
                 echo "${red}Cannot find Memcached installation script${end}"
                 add_failed_installation "Memcached (script not found)"
@@ -401,32 +346,21 @@ case $cache_choice in
         ;;
     "2")
         echo "${grn}Installing Redis...${end}"
-        
-        INSTALL_REDIS=$(pwd)/scripts/install/install_redis.sh
-        
-        # List contents of scripts/install directory for debugging
-        if [ -d "$(pwd)/scripts/install" ]; then
-            echo "${yel}DEBUG: Contents of $(pwd)/install/:${end}"
-            ls -la "$(pwd)/scripts/install/" | head -10
-        else
-            echo "${yel}DEBUG: Directory $(pwd)/install/ does not exist${end}"
-        fi
+        INSTALL_REDIS=scripts/install/install_redis.sh
         
         # Check if redis is already installed
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
             echo "${grn}Redis is already installed, skipping...${end}"
         else
             if test -f "$INSTALL_REDIS"; then
-                echo "${grn}DEBUG: Redis installation script found, executing...${end}"
                 if source "$INSTALL_REDIS"; then
                     echo "${grn}Redis installed successfully${end}"
                 else
                     add_failed_installation "Redis"
                 fi
-                # No need to change directories since we use absolute paths
+                cd "$(dirname "$0")"
             else
                 echo "${red}Cannot find Redis installation script${end}"
-                echo "${red}DEBUG: Checked path: $INSTALL_REDIS${end}"
                 add_failed_installation "Redis (script not found)"
             fi
         fi
@@ -435,7 +369,7 @@ case $cache_choice in
         echo "${grn}Installing both Memcached and Redis...${end}"
         
         # Install Memcached
-        INSTALL_MEMCACHED=$(pwd)/scripts/install/install_memcached.sh
+        INSTALL_MEMCACHED=scripts/install/install_memcached.sh
         if check_package_installed "memcached" || check_command_exists "memcached"; then
             echo "${grn}Memcached is already installed, skipping...${end}"
         else
@@ -446,7 +380,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Memcached"
                 fi
-                # No need to change directories since we use absolute paths
+                cd "$(dirname "$0")"
             else
                 echo "${red}Cannot find Memcached installation script${end}"
                 add_failed_installation "Memcached (script not found)"
@@ -454,7 +388,7 @@ case $cache_choice in
         fi
         
         # Install Redis
-        INSTALL_REDIS=$(pwd)/scripts/install/install_redis.sh
+        INSTALL_REDIS=scripts/install/install_redis.sh
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
             echo "${grn}Redis is already installed, skipping...${end}"
         else
@@ -465,7 +399,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Redis"
                 fi
-                # No need to change directories since we use absolute paths
+                cd "$(dirname "$0")"
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
@@ -483,7 +417,7 @@ esac
 echo ""
 
 # Install Ioncube
-INSTALL_IONCUBE=$(pwd)/scripts/install/install_ioncube.sh
+INSTALL_IONCUBE=scripts/install/install_ioncube.sh
 
 # Check if ioncube is already installed (check for ioncube loader in PHP)
 if php -m 2>/dev/null | grep -q "ionCube"; then
@@ -496,7 +430,8 @@ else
         else
             add_failed_installation "Ioncube"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find Ioncube installation script${end}"
         add_failed_installation "Ioncube (script not found)"
@@ -508,7 +443,7 @@ fi
 # For legacy applications requiring mcrypt, consider using mcrypt_compat library
 
 # Install HTOP
-INSTALL_HTOP=$(pwd)/scripts/install/install_htop.sh
+INSTALL_HTOP=scripts/install/install_htop.sh
 
 # Check if htop is already installed
 if check_command_exists "htop" || check_package_installed "htop"; then
@@ -521,7 +456,8 @@ else
         else
             add_failed_installation "HTOP"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find HTOP installation script${end}"
         add_failed_installation "HTOP (script not found)"
@@ -529,7 +465,7 @@ else
 fi
 
 # Install Netstat
-INSTALL_NETSTAT=$(pwd)/scripts/install/install_netstat.sh
+INSTALL_NETSTAT=scripts/install/install_netstat.sh
 
 # Check if netstat is already installed
 if check_command_exists "netstat" || check_package_installed "net-tools"; then
@@ -542,7 +478,8 @@ else
         else
             add_failed_installation "Netstat"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find Netstat installation script${end}"
         add_failed_installation "Netstat (script not found)"
@@ -564,28 +501,24 @@ ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
 case $ssl_choice in
     "1")
         echo "${grn}Installing OpenSSL...${end}"
-        INSTALL_OPENSSL=$(pwd)/scripts/install/install_openssl.sh
+        INSTALL_OPENSSL=scripts/install/install_openssl.sh
         
-        # Check if openssl is already installed
-        # if check_command_exists "openssl" || check_package_installed "openssl"; then
-        #     echo "${grn}OpenSSL is already installed, skipping...${end}"
-        # else
-            if test -f "$INSTALL_OPENSSL"; then
-                if source "$INSTALL_OPENSSL"; then
-                    echo "${grn}OpenSSL installed successfully${end}"
-                else
-                    add_failed_installation "OpenSSL"
-                fi
-                # No need to change directories since we use absolute paths
+        if test -f "$INSTALL_OPENSSL"; then
+            if source "$INSTALL_OPENSSL"; then
+                echo "${grn}OpenSSL installed successfully${end}"
             else
-                echo "${red}Cannot find OpenSSL installation script${end}"
-                add_failed_installation "OpenSSL (script not found)"
+                add_failed_installation "OpenSSL"
             fi
-        # fi
+            cd "$(dirname "$0")"
+        else
+            echo "${red}Cannot find OpenSSL installation script${end}"
+            add_failed_installation "OpenSSL (script not found)"
+        fi
+    
         ;;
     "2")
         echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
-        INSTALL_LETSENCRYPT=$(pwd)/scripts/install/install_letsencrypt.sh
+        INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
         
         # Check if certbot is already installed
         if check_command_exists "certbot"; then
@@ -597,7 +530,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "Let's Encrypt"
                 fi
-                # No need to change directories since we use absolute paths
+                cd "$(dirname "$0")"
             else
                 echo "${red}Cannot find Let's Encrypt installation script${end}"
                 add_failed_installation "Let's Encrypt (script not found)"
@@ -608,8 +541,7 @@ case $ssl_choice in
         echo "${grn}Installing both OpenSSL and Let's Encrypt...${end}"
         
         # Install OpenSSL
-        INSTALL_OPENSSL=$(pwd)/scripts/install/install_openssl.sh
-       
+        INSTALL_OPENSSL=scripts/install/install_openssl.sh
         if test -f "$INSTALL_OPENSSL"; then
             echo "${grn}Installing OpenSSL...${end}"
             if source "$INSTALL_OPENSSL"; then
@@ -617,15 +549,14 @@ case $ssl_choice in
             else
                 add_failed_installation "OpenSSL"
             fi
-            # No need to change directories since we use absolute paths
+            cd "$(dirname "$0")"
         else
             echo "${red}Cannot find OpenSSL installation script${end}"
             add_failed_installation "OpenSSL (script not found)"
         fi
-    
         
         # Install Let's Encrypt
-        INSTALL_LETSENCRYPT=$(pwd)/scripts/install/install_letsencrypt.sh
+        INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
         if check_command_exists "certbot"; then
             echo "${grn}Let's Encrypt (Certbot) is already installed, skipping...${end}"
         else
@@ -636,7 +567,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "Let's Encrypt"
                 fi
-                # No need to change directories since we use absolute paths
+                cd "$(dirname "$0")"
             else
                 echo "${red}Cannot find Let's Encrypt installation script${end}"
                 add_failed_installation "Let's Encrypt (script not found)"
@@ -654,7 +585,7 @@ esac
 echo ""
 
 # Install AB BENCHMARKING TOOL
-INSTALL_AB=$(pwd)/scripts/install/install_ab.sh
+INSTALL_AB=scripts/install/install_ab.sh
 
 # Check if ab (Apache Bench) is already installed
 if check_command_exists "ab" || check_package_installed "apache2-utils"; then
@@ -667,7 +598,8 @@ else
         else
             add_failed_installation "AB Benchmarking Tool"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find AB installation script${end}"
         add_failed_installation "AB Benchmarking Tool (script not found)"
@@ -675,7 +607,7 @@ else
 fi
 
 # Install ZIP AND UNZIP
-INSTALL_ZIPS=$(pwd)/scripts/install/install_zips.sh
+INSTALL_ZIPS=scripts/install/install_zips.sh
 
 # Check if zip and unzip are already installed
 if check_command_exists "zip" && check_command_exists "unzip"; then
@@ -688,7 +620,8 @@ else
         else
             add_failed_installation "ZIP and UNZIP"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find ZIP installation script${end}"
         add_failed_installation "ZIP and UNZIP (script not found)"
@@ -696,7 +629,7 @@ else
 fi
 
 # Install FFMPEG and IMAGEMAGICK
-INSTALL_FFMPEG=$(pwd)/scripts/install/install_ffmpeg.sh
+INSTALL_FFMPEG=scripts/install/install_ffmpeg.sh
 
 # Check if ffmpeg and imagemagick are already installed
 if check_command_exists "ffmpeg" && check_command_exists "convert"; then
@@ -709,7 +642,8 @@ else
         else
             add_failed_installation "FFMPEG and ImageMagick"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find FFMPEG installation script${end}"
         add_failed_installation "FFMPEG and ImageMagick (script not found)"
@@ -717,7 +651,7 @@ else
 fi
 
 # Install Git And Curl
-INSTALL_GIT=$(pwd)/scripts/install/install_git.sh
+INSTALL_GIT=scripts/install/install_git.sh
 
 # Check if git and curl are already installed
 if check_command_exists "git" && check_command_exists "curl"; then
@@ -730,7 +664,8 @@ else
         else
             add_failed_installation "Git and Curl"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find Git installation script${end}"
         add_failed_installation "Git and Curl (script not found)"
@@ -738,7 +673,7 @@ else
 fi
 
 # Install Composer
-INSTALL_COMPOSER=$(pwd)/scripts/install/install_composer.sh
+INSTALL_COMPOSER=scripts/install/install_composer.sh
 
 # Check if composer is already installed
 if check_command_exists "composer"; then
@@ -751,7 +686,8 @@ else
         else
             add_failed_installation "Composer"
         fi
-        # No need to change directories since we use absolute paths
+        # Return to the script directory
+        cd "$(dirname "$0")"
     else
         echo "${red}Cannot find Composer installation script${end}"
         add_failed_installation "Composer (script not found)"
