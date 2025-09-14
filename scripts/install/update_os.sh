@@ -19,16 +19,20 @@ update_os() {
      echo "${grn}Starting update os ...${end}"
      echo ""
      sleep 3
-     # By default this is set to "interactive" mode which causes the interruption of scripts.
-     if [[ "${OS_VERSION}" == "22.04" ]] || [[ "${OS_VERSION}" == "22.10" ]] || [[ "${OS_VERSION}" == "24.04" ]] || [[ "${OS_VERSION}" == "12" ]] || [[ "${OS_VERSION}" == "13" ]]; then
-          sed -i 's/#$nrconf{restart} = '"'"'i'"'"';/$nrconf{restart} = '"'"'a'"'"';/' /etc/needrestart/needrestart.conf
-          sudo apt -y remove needrestart
+     # Disable needrestart to avoid interactive prompts on supported Ubuntu versions.
+     # The needrestart package may not be installed on some systems, so ignore errors.
+     if [[ "${OS_VERSION}" == "22.04" ]] || [[ "${OS_VERSION}" == "22.10" ]] || [[ "${OS_VERSION}" == "24.04" ]]; then
+          if [ -f /etc/needrestart/needrestart.conf ]; then
+               sed -i 's/#$nrconf{restart} = '\''i'\'';/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf || true
+               sudo apt -y remove needrestart || true
+          fi
      fi
 
+     # Always update the package list
      apt update
 
+     # Use non‑interactive upgrades on recent Debian releases to avoid prompts.
      if [[ "${OS_VERSION}" == "11" ]] || [[ "${OS_VERSION}" == "12" ]] || [[ "${OS_VERSION}" == "13" ]]; then
-          # Non-interactive apt upgrade
           sudo DEBIAN_FRONTEND=noninteractive apt-get -yq upgrade
      else
           apt upgrade -y

@@ -474,11 +474,11 @@ fi
 echo "${grn}=== SSL SOLUTION SELECTION ===${end}"
 echo "${yel}Choose your preferred SSL solution:${end}"
 echo "${blu}1) Install OpenSSL only${end}"
-echo "${blu}2) Install Let's Encrypt (Certbot) ${grn}[DEFAULT]${end}${end}"
-echo "${blu}3) Install both OpenSSL and Let's Encrypt${end}"
+echo "${blu}2) Install Let's Encrypt (Certbot)${end}"
+echo "${blu}3) Install both OpenSSL and Let's Encrypt ${grn}[DEFAULT]${end}${end}"
 echo "${blu}4) Skip SSL installation${end}"
 echo ""
-ssl_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
+ssl_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "3")
 # Trim whitespace from input
 ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
 
