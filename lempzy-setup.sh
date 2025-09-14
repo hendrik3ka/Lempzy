@@ -26,8 +26,52 @@
 
 set -e
 
-# Get the directory where this script is located dynamically
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the directory where this script is located dynamically with robust path detection
+# This script is in the root of Lempzy, so SCRIPT_DIR should be the Lempzy root directory
+get_script_directory() {
+    local script_dir=""
+    
+    # Method 1: Use BASH_SOURCE[0] (most reliable)
+    if [ -n "${BASH_SOURCE[0]}" ]; then
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        # Verify this is actually the Lempzy root by checking for scripts directory
+        if [ -d "$script_dir/scripts" ] && [ -f "$script_dir/lempzy-setup.sh" ]; then
+            echo "$script_dir"
+            return 0
+        fi
+    fi
+    
+    # Method 2: Use $0 as fallback
+    if [ -n "$0" ]; then
+        script_dir="$(cd "$(dirname "$0")" && pwd)"
+        if [ -d "$script_dir/scripts" ] && [ -f "$script_dir/lempzy-setup.sh" ]; then
+            echo "$script_dir"
+            return 0
+        fi
+    fi
+    
+    # Method 3: Search upward from current directory
+    local current_dir="$(pwd)"
+    while [ "$current_dir" != "/" ]; do
+        if [ -d "$current_dir/scripts" ] && [ -f "$current_dir/lempzy-setup.sh" ]; then
+            echo "$current_dir"
+            return 0
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    
+    # Method 4: Check common installation locations
+    for possible_dir in "/root/Lempzy" "/home/*/Lempzy" "/opt/lempzy" "/usr/local/lempzy"; do
+        if [ -d "$possible_dir/scripts" ] && [ -f "$possible_dir/lempzy-setup.sh" ]; then
+            echo "$possible_dir"
+            return 0
+        fi
+    done
+    
+    # If all methods fail, return current directory as last resort
+    echo "$(pwd)"
+    return 1
+}
 
 # Colours
 red=$'\e[1;31m'
@@ -37,6 +81,18 @@ blu=$'\e[1;34m'
 mag=$'\e[1;35m'
 cyn=$'\e[1;36m'
 end=$'\e[0m'
+
+SCRIPT_DIR="$(get_script_directory)"
+
+# Validate that we found the correct Lempzy directory
+if [ ! -d "$SCRIPT_DIR/scripts" ] || [ ! -f "$SCRIPT_DIR/lempzy-setup.sh" ]; then
+    echo "${red}Error: Could not locate Lempzy installation directory!${end}"
+    echo "${red}Detected path: $SCRIPT_DIR${end}"
+    echo "${red}Please ensure you're running this script from the Lempzy directory${end}"
+    exit 1
+else
+    echo "${grn}Lempzy installation directory detected: $SCRIPT_DIR${end}"
+fi
 
 # Array to track failed installations
 FAILED_INSTALLATIONS=()
