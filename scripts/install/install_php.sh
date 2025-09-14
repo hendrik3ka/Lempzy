@@ -272,7 +272,6 @@ install_specific_php_version() {
      else
           echo "${yel}Warning: PHP version verification failed, but installation completed${end}"
      fi
-     esac
      
      echo ""
      sleep 1
