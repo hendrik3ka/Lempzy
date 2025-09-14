@@ -140,13 +140,7 @@ UPDATE_OS=$SCRIPT_DIR/scripts/install/update_os.sh
 
 if test -f "$UPDATE_OS"; then
      source $UPDATE_OS
-     # Check if Lempzy directory exists before navigating to it
-     if [ -d "$HOME/Lempzy" ]; then
-          cd && cd && cd Lempzy
-     else
-          echo "${yel}Lempzy directory not found, staying in current directory${end}"
-          # Continue with script execution from current directory
-     fi
+     # No need to change directories since we use absolute paths
 else
      echo "${red}Cannot find OS update script, continuing without OS update${end}"
      # Continue script execution instead of exiting
@@ -157,12 +151,7 @@ INSTALL_UFW_FIREWALL=$SCRIPT_DIR/scripts/install/install_firewall.sh
 
 if test -f "$INSTALL_UFW_FIREWALL"; then
      source $INSTALL_UFW_FIREWALL
-     if [ -d "$HOME/Lempzy" ]; then
-          cd && cd Lempzy
-     else
-          echo "${yel}Lempzy directory not found, staying in current directory${end}"
-          # Continue with script execution from current directory
-     fi
+     # No need to change directories since we use absolute paths
 else
      echo "${red}Cannot Install UFW Firewall${end}"
      exit
@@ -215,8 +204,7 @@ else
         else
             add_failed_installation "MariaDB"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find MariaDB installation script${end}"
         add_failed_installation "MariaDB (script not found)"
@@ -287,8 +275,7 @@ else
         else
             add_failed_installation "PHP"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find PHP installation script${end}"
         add_failed_installation "PHP (script not found)"
@@ -302,12 +289,7 @@ INSTALL_NGINX=$SCRIPT_DIR/scripts/install/install_nginx.sh
 
 if test -f "$INSTALL_NGINX"; then
      source $INSTALL_NGINX
-     if [ -d "$HOME/Lempzy" ]; then
-          cd && cd Lempzy
-     else
-          echo "${yel}Lempzy directory not found, staying in current directory${end}"
-          # Continue with script execution from current directory
-     fi
+     # No need to change directories since we use absolute paths
 else
      echo "${red}Cannot Install Nginx${end}"
      exit
@@ -340,7 +322,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Memcached"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Memcached installation script${end}"
                 add_failed_installation "Memcached (script not found)"
@@ -361,7 +343,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Redis"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
@@ -383,7 +365,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Memcached"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Memcached installation script${end}"
                 add_failed_installation "Memcached (script not found)"
@@ -402,7 +384,7 @@ case $cache_choice in
                 else
                     add_failed_installation "Redis"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
@@ -433,8 +415,7 @@ else
         else
             add_failed_installation "Ioncube"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find Ioncube installation script${end}"
         add_failed_installation "Ioncube (script not found)"
@@ -459,8 +440,7 @@ else
         else
             add_failed_installation "HTOP"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find HTOP installation script${end}"
         add_failed_installation "HTOP (script not found)"
@@ -481,8 +461,7 @@ else
         else
             add_failed_installation "Netstat"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find Netstat installation script${end}"
         add_failed_installation "Netstat (script not found)"
@@ -516,7 +495,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "OpenSSL"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find OpenSSL installation script${end}"
                 add_failed_installation "OpenSSL (script not found)"
@@ -537,7 +516,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "Let's Encrypt"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Let's Encrypt installation script${end}"
                 add_failed_installation "Let's Encrypt (script not found)"
@@ -559,7 +538,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "OpenSSL"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find OpenSSL installation script${end}"
                 add_failed_installation "OpenSSL (script not found)"
@@ -578,7 +557,7 @@ case $ssl_choice in
                 else
                     add_failed_installation "Let's Encrypt"
                 fi
-                cd "$(dirname "$0")"
+                # No need to change directories since we use absolute paths
             else
                 echo "${red}Cannot find Let's Encrypt installation script${end}"
                 add_failed_installation "Let's Encrypt (script not found)"
@@ -609,8 +588,7 @@ else
         else
             add_failed_installation "AB Benchmarking Tool"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find AB installation script${end}"
         add_failed_installation "AB Benchmarking Tool (script not found)"
@@ -631,8 +609,7 @@ else
         else
             add_failed_installation "ZIP and UNZIP"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find ZIP installation script${end}"
         add_failed_installation "ZIP and UNZIP (script not found)"
@@ -653,8 +630,7 @@ else
         else
             add_failed_installation "FFMPEG and ImageMagick"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find FFMPEG installation script${end}"
         add_failed_installation "FFMPEG and ImageMagick (script not found)"
@@ -675,8 +651,7 @@ else
         else
             add_failed_installation "Git and Curl"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find Git installation script${end}"
         add_failed_installation "Git and Curl (script not found)"
@@ -697,8 +672,7 @@ else
         else
             add_failed_installation "Composer"
         fi
-        # Return to the script directory
-        cd "$(dirname "$0")"
+        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find Composer installation script${end}"
         add_failed_installation "Composer (script not found)"
