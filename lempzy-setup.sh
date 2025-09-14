@@ -94,6 +94,25 @@ else
     echo "${grn}Lempzy installation directory detected: $SCRIPT_DIR${end}"
 fi
 
+# Helper function to execute installation scripts with proper directory context
+execute_install_script() {
+    local script_path="$1"
+    local original_dir="$(pwd)"
+    local exit_code=0
+    
+    if test -f "$script_path"; then
+        # Change to Lempzy directory before sourcing scripts to maintain compatibility
+        cd "$SCRIPT_DIR"
+        # Source the script and capture its exit code
+        source "$script_path" || exit_code=$?
+        # Return to original directory
+        cd "$original_dir"
+        return $exit_code
+    else
+        return 1
+    fi
+}
+
 # Array to track failed installations
 FAILED_INSTALLATIONS=()
 
@@ -194,9 +213,8 @@ echo ""
 # Update os
 UPDATE_OS=$SCRIPT_DIR/scripts/install/update_os.sh
 
-if test -f "$UPDATE_OS"; then
-     source $UPDATE_OS
-     # No need to change directories since we use absolute paths
+if execute_install_script "$UPDATE_OS"; then
+     echo "${grn}OS update completed${end}"
 else
      echo "${red}Cannot find OS update script, continuing without OS update${end}"
      # Continue script execution instead of exiting
@@ -205,9 +223,8 @@ fi
 # Installing UFW Firewall
 INSTALL_UFW_FIREWALL=$SCRIPT_DIR/scripts/install/install_firewall.sh
 
-if test -f "$INSTALL_UFW_FIREWALL"; then
-     source $INSTALL_UFW_FIREWALL
-     # No need to change directories since we use absolute paths
+if execute_install_script "$INSTALL_UFW_FIREWALL"; then
+     echo "${grn}UFW Firewall installed successfully${end}"
 else
      echo "${red}Cannot Install UFW Firewall${end}"
      exit
@@ -255,12 +272,11 @@ else
         echo "${grn}Installing MariaDB $SELECTED_MARIADB_VERSION...${end}"
         # Export the selected MariaDB version for the install script to use
         export SELECTED_MARIADB_VERSION
-        if source "$INSTALL_MARIADB"; then
+        if execute_install_script "$INSTALL_MARIADB"; then
             echo "${grn}MariaDB installed successfully${end}"
         else
             add_failed_installation "MariaDB"
         fi
-        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find MariaDB installation script${end}"
         add_failed_installation "MariaDB (script not found)"
@@ -326,12 +342,11 @@ else
         echo "${grn}Installing PHP...${end}"
         # Export the selected PHP version for the install script to use
         export SELECTED_PHP_VERSION
-        if source "$INSTALL_PHP"; then
+        if execute_install_script "$INSTALL_PHP"; then
             echo "${grn}PHP installed successfully${end}"
         else
             add_failed_installation "PHP"
         fi
-        # No need to change directories since we use absolute paths
     else
         echo "${red}Cannot find PHP installation script${end}"
         add_failed_installation "PHP (script not found)"
@@ -343,9 +358,8 @@ echo ""
 # Install, Start, And Configure nginx
 INSTALL_NGINX=$SCRIPT_DIR/scripts/install/install_nginx.sh
 
-if test -f "$INSTALL_NGINX"; then
-     source $INSTALL_NGINX
-     # No need to change directories since we use absolute paths
+if execute_install_script "$INSTALL_NGINX"; then
+     echo "${grn}Nginx installed successfully${end}"
 else
      echo "${red}Cannot Install Nginx${end}"
      exit
