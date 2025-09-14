@@ -27,7 +27,8 @@ Here all the list that the script will install
 
 ## Prerequisites
 What things you need to make sure before proceed.
-* **OS: DEBIAN (10, 11), UBUNTU (18.04, 20.04, 22.04, 22.10)**
+* **OS: DEBIAN (10, 11, 12, 13), UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04)**
+* **PHP Versions Supported: 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4**
 * **YOU SHOULD BE LOGIN AS ROOT**
 * **FRESH CLEAN SERVER**
 

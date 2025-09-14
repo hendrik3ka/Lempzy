@@ -20,14 +20,14 @@ update_os() {
      echo ""
      sleep 3
      # By default this is set to "interactive" mode which causes the interruption of scripts.
-     if [[ "${OS_VERSION}" == "22.04" ]] || [[ "${OS_VERSION}" == "22.10" ]]; then
+     if [[ "${OS_VERSION}" == "22.04" ]] || [[ "${OS_VERSION}" == "22.10" ]] || [[ "${OS_VERSION}" == "24.04" ]] || [[ "${OS_VERSION}" == "12" ]] || [[ "${OS_VERSION}" == "13" ]]; then
           sed -i 's/#$nrconf{restart} = '"'"'i'"'"';/$nrconf{restart} = '"'"'a'"'"';/' /etc/needrestart/needrestart.conf
           sudo apt -y remove needrestart
      fi
 
      apt update
 
-     if [[ "${OS_VERSION}" == "11" ]]; then
+     if [[ "${OS_VERSION}" == "11" ]] || [[ "${OS_VERSION}" == "12" ]] || [[ "${OS_VERSION}" == "13" ]]; then
           # Non-interactive apt upgrade
           sudo DEBIAN_FRONTEND=noninteractive apt-get -yq upgrade
      else

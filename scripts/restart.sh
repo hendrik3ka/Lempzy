@@ -27,8 +27,18 @@ restart_services() {
 
      elif [[ "${PHP_VERSION}" == "8.1" ]]; then
           systemctl restart php8.1-fpm.service
+          
+     elif [[ "${PHP_VERSION}" == "8.2" ]]; then
+          systemctl restart php8.2-fpm.service
+
+     elif [[ "${PHP_VERSION}" == "8.3" ]]; then
+          systemctl restart php8.3-fpm.service
+
+     elif [[ "${PHP_VERSION}" == "8.4" ]]; then
+          systemctl restart php8.4-fpm.service
+
      else
-          echo -e "${red}Sorry, This script is designed for DEBIAN (10, 11), UBUNTU (18.04, 20.04, 22.04, 22.10)${end}"
+          echo -e "${red}Sorry, This script is designed for DEBIAN (10, 11, 12, 13), UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04)${end}"
           exit 1
      fi
 

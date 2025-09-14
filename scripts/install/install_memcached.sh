@@ -28,7 +28,7 @@ install_memcached() {
      # Get OS Version
      OS_VERSION=$(lsb_release -rs)
 
-     if [[ "${OS_VERSION}" != "22.04" ]] && [[ "${OS_VERSION}" != "22.10" ]]; then
+     if [[ "${OS_VERSION}" != "22.04" ]] && [[ "${OS_VERSION}" != "22.10" ]] && [[ "${OS_VERSION}" != "24.04" ]] && [[ "${OS_VERSION}" != "12" ]] && [[ "${OS_VERSION}" != "13" ]]; then
           if [[ "${PHP_MAJOR_VERSION}" == "8" ]]; then
                apt-get purge php8.* -y
                apt-get autoclean

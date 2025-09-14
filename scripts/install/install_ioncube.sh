@@ -50,8 +50,23 @@ install_ioncube() {
           # Copy files to modules folder
           echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.1/fpm/php.ini
           echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.1/cli/php.ini
+
+     elif [[ "${PHP_VERSION}" == "8.2" ]]; then
+          # Copy files to modules folder
+          echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.2/fpm/php.ini
+          echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.2/cli/php.ini
+
+     elif [[ "${PHP_VERSION}" == "8.3" ]]; then
+          # Copy files to modules folder
+          echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.3/fpm/php.ini
+          echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.3/cli/php.ini
+
+     elif [[ "${PHP_VERSION}" == "8.4" ]]; then
+          # Copy files to modules folder
+          echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.4/fpm/php.ini
+          echo "zend_extension=$MODULES/ioncube_loader_lin_${PHP_VERSION}.so" >>/etc/php/8.4/cli/php.ini
      else
-          echo -e "${red}Sorry, This script is designed for DEBIAN (10, 11), UBUNTU (18.04, 20.04, 22.04, 22.10)${end}"
+          echo -e "${red}Sorry, This script is designed for DEBIAN (10, 11, 12, 13), UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04)${end}"
           exit 1
      fi
 
@@ -63,7 +78,7 @@ install_ioncube() {
      if test -f "$RESTART_SERVICES"; then
           source $RESTART_SERVICES
      else
-          echo "${red}Cannot Restart Nginx And Nginx${end}"
+          echo "${red}Cannot Restart Nginx and PHP${end}"
           exit
      fi
 
