@@ -26,6 +26,9 @@
 
 set -e
 
+# Get the directory where this script is located dynamically
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Colours
 red=$'\e[1;31m'
 grn=$'\e[1;32m'
@@ -133,7 +136,7 @@ echo "**************************************************************************
 echo ""
 
 # Update os
-UPDATE_OS=scripts/install/update_os.sh
+UPDATE_OS=$SCRIPT_DIR/scripts/install/update_os.sh
 
 if test -f "$UPDATE_OS"; then
      source $UPDATE_OS
@@ -150,7 +153,7 @@ else
 fi
 
 # Installing UFW Firewall
-INSTALL_UFW_FIREWALL=scripts/install/install_firewall.sh
+INSTALL_UFW_FIREWALL=$SCRIPT_DIR/scripts/install/install_firewall.sh
 
 if test -f "$INSTALL_UFW_FIREWALL"; then
      source $INSTALL_UFW_FIREWALL
@@ -197,7 +200,7 @@ case $mariadb_choice in
         ;;
 esac
 
-INSTALL_MARIADB=scripts/install/install_mariadb.sh
+INSTALL_MARIADB=$SCRIPT_DIR/scripts/install/install_mariadb.sh
 
 # Check if MariaDB is already installed
 if check_command_exists "mysql" || check_package_installed "mariadb-server"; then
@@ -268,7 +271,7 @@ case $php_choice in
         ;;
 esac
 
-INSTALL_PHP=scripts/install/install_php.sh
+INSTALL_PHP=$SCRIPT_DIR/scripts/install/install_php.sh
 
 # Check if PHP is already installed
 if check_command_exists "php"; then
@@ -295,7 +298,7 @@ fi
 echo ""
 
 # Install, Start, And Configure nginx
-INSTALL_NGINX=scripts/install/install_nginx.sh
+INSTALL_NGINX=$SCRIPT_DIR/scripts/install/install_nginx.sh
 
 if test -f "$INSTALL_NGINX"; then
      source $INSTALL_NGINX
@@ -325,7 +328,7 @@ cache_choice=$(echo "$cache_choice" | tr -d '[:space:]')
 case $cache_choice in
     "1")
         echo "${grn}Installing Memcached...${end}"
-        INSTALL_MEMCACHED=scripts/install/install_memcached.sh
+        INSTALL_MEMCACHED=$SCRIPT_DIR/scripts/install/install_memcached.sh
         
         # Check if memcached is already installed
         if check_package_installed "memcached" || check_command_exists "memcached"; then
@@ -346,7 +349,7 @@ case $cache_choice in
         ;;
     "2")
         echo "${grn}Installing Redis...${end}"
-        INSTALL_REDIS=scripts/install/install_redis.sh
+        INSTALL_REDIS=$SCRIPT_DIR/scripts/install/install_redis.sh
         
         # Check if redis is already installed
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
@@ -369,7 +372,7 @@ case $cache_choice in
         echo "${grn}Installing both Memcached and Redis...${end}"
         
         # Install Memcached
-        INSTALL_MEMCACHED=scripts/install/install_memcached.sh
+        INSTALL_MEMCACHED=$SCRIPT_DIR/scripts/install/install_memcached.sh
         if check_package_installed "memcached" || check_command_exists "memcached"; then
             echo "${grn}Memcached is already installed, skipping...${end}"
         else
@@ -388,7 +391,7 @@ case $cache_choice in
         fi
         
         # Install Redis
-        INSTALL_REDIS=scripts/install/install_redis.sh
+        INSTALL_REDIS=$SCRIPT_DIR/scripts/install/install_redis.sh
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
             echo "${grn}Redis is already installed, skipping...${end}"
         else
@@ -417,7 +420,7 @@ esac
 echo ""
 
 # Install Ioncube
-INSTALL_IONCUBE=scripts/install/install_ioncube.sh
+INSTALL_IONCUBE=$SCRIPT_DIR/scripts/install/install_ioncube.sh
 
 # Check if ioncube is already installed (check for ioncube loader in PHP)
 if php -m 2>/dev/null | grep -q "ionCube"; then
@@ -443,7 +446,7 @@ fi
 # For legacy applications requiring mcrypt, consider using mcrypt_compat library
 
 # Install HTOP
-INSTALL_HTOP=scripts/install/install_htop.sh
+INSTALL_HTOP=$SCRIPT_DIR/scripts/install/install_htop.sh
 
 # Check if htop is already installed
 if check_command_exists "htop" || check_package_installed "htop"; then
@@ -465,7 +468,7 @@ else
 fi
 
 # Install Netstat
-INSTALL_NETSTAT=scripts/install/install_netstat.sh
+INSTALL_NETSTAT=$SCRIPT_DIR/scripts/install/install_netstat.sh
 
 # Check if netstat is already installed
 if check_command_exists "netstat" || check_package_installed "net-tools"; then
@@ -501,7 +504,7 @@ ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
 case $ssl_choice in
     "1")
         echo "${grn}Installing OpenSSL...${end}"
-        INSTALL_OPENSSL=scripts/install/install_openssl.sh
+        INSTALL_OPENSSL=$SCRIPT_DIR/scripts/install/install_openssl.sh
         
         # Check if openssl is already installed
         # if check_command_exists "openssl" || check_package_installed "openssl"; then
@@ -522,7 +525,7 @@ case $ssl_choice in
         ;;
     "2")
         echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
-        INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
+        INSTALL_LETSENCRYPT=$SCRIPT_DIR/scripts/install/install_letsencrypt.sh
         
         # Check if certbot is already installed
         if check_command_exists "certbot"; then
@@ -545,7 +548,7 @@ case $ssl_choice in
         echo "${grn}Installing both OpenSSL and Let's Encrypt...${end}"
         
         # Install OpenSSL
-        INSTALL_OPENSSL=scripts/install/install_openssl.sh
+        INSTALL_OPENSSL=$SCRIPT_DIR/scripts/install/install_openssl.sh
         if check_command_exists "openssl" || check_package_installed "openssl"; then
             echo "${grn}OpenSSL is already installed, skipping...${end}"
         else
@@ -564,7 +567,7 @@ case $ssl_choice in
         fi
         
         # Install Let's Encrypt
-        INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
+        INSTALL_LETSENCRYPT=$SCRIPT_DIR/scripts/install/install_letsencrypt.sh
         if check_command_exists "certbot"; then
             echo "${grn}Let's Encrypt (Certbot) is already installed, skipping...${end}"
         else
@@ -593,7 +596,7 @@ esac
 echo ""
 
 # Install AB BENCHMARKING TOOL
-INSTALL_AB=scripts/install/install_ab.sh
+INSTALL_AB=$SCRIPT_DIR/scripts/install/install_ab.sh
 
 # Check if ab (Apache Bench) is already installed
 if check_command_exists "ab" || check_package_installed "apache2-utils"; then
@@ -615,7 +618,7 @@ else
 fi
 
 # Install ZIP AND UNZIP
-INSTALL_ZIPS=scripts/install/install_zips.sh
+INSTALL_ZIPS=$SCRIPT_DIR/scripts/install/install_zips.sh
 
 # Check if zip and unzip are already installed
 if check_command_exists "zip" && check_command_exists "unzip"; then
@@ -637,7 +640,7 @@ else
 fi
 
 # Install FFMPEG and IMAGEMAGICK
-INSTALL_FFMPEG=scripts/install/install_ffmpeg.sh
+INSTALL_FFMPEG=$SCRIPT_DIR/scripts/install/install_ffmpeg.sh
 
 # Check if ffmpeg and imagemagick are already installed
 if check_command_exists "ffmpeg" && check_command_exists "convert"; then
@@ -659,7 +662,7 @@ else
 fi
 
 # Install Git And Curl
-INSTALL_GIT=scripts/install/install_git.sh
+INSTALL_GIT=$SCRIPT_DIR/scripts/install/install_git.sh
 
 # Check if git and curl are already installed
 if check_command_exists "git" && check_command_exists "curl"; then
@@ -681,7 +684,7 @@ else
 fi
 
 # Install Composer
-INSTALL_COMPOSER=scripts/install/install_composer.sh
+INSTALL_COMPOSER=$SCRIPT_DIR/scripts/install/install_composer.sh
 
 # Check if composer is already installed
 if check_command_exists "composer"; then
