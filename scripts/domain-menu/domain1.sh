@@ -203,14 +203,22 @@ add_vhost() {
 
      configName=$domain
      cd $sitesAvailable
-     cp /root/Lempzy/scripts/vhost-fastcgi $sitesAvailable$domain
+     # Get the directory where this script is located dynamically
+     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+     LEMPZY_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+     
+     cp "$LEMPZY_ROOT/scripts/vhost-fastcgi" $sitesAvailable$domain
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
 }
 
 # PHP POOL SETTING
 setting_php_pool() {
-     cp /root/Lempzy/scripts/phpdotdeb /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
+     # Get the directory where this script is located dynamically
+     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+     LEMPZY_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+     
+     cp "$LEMPZY_ROOT/scripts/phpdotdeb" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      sed -i "s/domain.com/$domain/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      sed -i "s/phpX.X/php$PHP_VERSION/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      echo "" >>/etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf

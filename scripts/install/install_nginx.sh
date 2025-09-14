@@ -28,11 +28,26 @@ configuring_php_fpm_nginx() {
      echo "${grn}Configuring to make PHP-FPM working with Nginx ...${end}"
      echo ""
      sleep 3
-     rm -rf /etc/nginx/nginx.conf
-     cd /etc/nginx/
-     cp /root/Lempzy/scripts/nginx.conf nginx.conf
-     dos2unix /etc/nginx/nginx.conf
-     cd
+     
+     # Get the directory where this script is located
+     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+     # Go up one level to get the scripts directory
+     SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+     
+     # Check if nginx.conf exists in the scripts directory
+     if [ -f "$SCRIPTS_DIR/nginx.conf" ]; then
+          echo "${grn}Found nginx.conf at: $SCRIPTS_DIR/nginx.conf${end}"
+          rm -rf /etc/nginx/nginx.conf
+          cd /etc/nginx/
+          cp "$SCRIPTS_DIR/nginx.conf" nginx.conf
+          dos2unix /etc/nginx/nginx.conf
+          cd
+     else
+          echo "${red}Error: nginx.conf not found at $SCRIPTS_DIR/nginx.conf${end}"
+          echo "${yel}Please ensure the nginx.conf file exists in the scripts directory${end}"
+          return 1
+     fi
+     
      echo ""
      sleep 1
 }

@@ -14,6 +14,10 @@ mag=$'\e[1;35m'
 cyn=$'\e[1;36m'
 end=$'\e[0m'
 
+# Get the directory where this script is located dynamically
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LEMPZY_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
@@ -87,7 +91,7 @@ main_menu() {
 
       5)
         # Show Domain
-        SHOW_DOMAIN=/root/Lempzy/scripts/domain-menu/showdomain.sh
+        SHOW_DOMAIN=$LEMPZY_ROOT/scripts/domain-menu/showdomain.sh
 
         if test -f "$SHOW_DOMAIN"; then
           source $SHOW_DOMAIN
@@ -101,7 +105,7 @@ main_menu() {
 
       6)
         # Show Databases
-        SHOW_DATABASES=/root/Lempzy/scripts/database-menu/show-databases.sh
+        SHOW_DATABASES=$LEMPZY_ROOT/scripts/database-menu/show-databases.sh
 
         if test -f "$SHOW_DATABASES"; then
           source $SHOW_DATABASES
@@ -115,7 +119,7 @@ main_menu() {
 
       7)
         # Change Port SSHD
-        CHANGE_PORT_SSHD=/root/Lempzy/scripts/main-menu/changeportsshd.sh
+        CHANGE_PORT_SSHD=$LEMPZY_ROOT/scripts/main-menu/changeportsshd.sh
 
         if test -f "$CHANGE_PORT_SSHD"; then
           source $CHANGE_PORT_SSHD
@@ -146,7 +150,7 @@ main_menu() {
 
       10)
         # Restart Server
-        RESTART_SERVER=/root/Lempzy/scripts/main-menu/restartserver.sh
+        RESTART_SERVER=$LEMPZY_ROOT/scripts/main-menu/restartserver.sh
 
         if test -f "$RESTART_SERVER"; then
           source $RESTART_SERVER
@@ -226,7 +230,7 @@ sub_menu1() {
 
       1)
         # ADD DOMAIN / SUB-DOMAIN
-        DOMAIN1=/root/Lempzy/scripts/domain-menu/domain1.sh
+        DOMAIN1=$LEMPZY_ROOT/scripts/domain-menu/domain1.sh
 
         if test -f "$DOMAIN1"; then
           source $DOMAIN1
@@ -240,7 +244,7 @@ sub_menu1() {
 
       2)
         # ADD DOMAIN
-        DOMAIN2=/root/Lempzy/scripts/domain-menu/domain2.sh
+        DOMAIN2=$LEMPZY_ROOT/scripts/domain-menu/domain2.sh
 
         if test -f "$DOMAIN2"; then
           source $DOMAIN2
@@ -254,7 +258,7 @@ sub_menu1() {
 
       3)
         # ADD LET'S ENCRYPT SSL TO EXISTING DOMAIN
-        LETSENCRYPT_AUTO=/root/Lempzy/scripts/domain-menu/letsencrypt_auto.sh
+        LETSENCRYPT_AUTO=$LEMPZY_ROOT/scripts/domain-menu/letsencrypt_auto.sh
 
         if test -f "$LETSENCRYPT_AUTO"; then
           source $LETSENCRYPT_AUTO
@@ -268,7 +272,7 @@ sub_menu1() {
 
       4)
         # Show Domain
-        SHOW_DOMAIN=/root/Lempzy/scripts/domain-menu/showdomain.sh
+        SHOW_DOMAIN=$LEMPZY_ROOT/scripts/domain-menu/showdomain.sh
 
         if test -f "$SHOW_DOMAIN"; then
           source $SHOW_DOMAIN
@@ -282,7 +286,7 @@ sub_menu1() {
 
       5)
         # Back Up Web Data
-        BACKUP_WEB_DATA=/root/Lempzy/scripts/domain-menu/backupwebdata.sh
+        BACKUP_WEB_DATA=$LEMPZY_ROOT/scripts/domain-menu/backupwebdata.sh
 
         if test -f "$BACKUP_WEB_DATA"; then
           source $BACKUP_WEB_DATA
@@ -296,7 +300,7 @@ sub_menu1() {
 
       6)
         # DELETE DOMAIN / SUB-DOMAIN
-        DELETE_DOMAIN=/root/Lempzy/scripts/domain-menu/delete.sh
+        DELETE_DOMAIN=$LEMPZY_ROOT/scripts/domain-menu/delete.sh
 
         if test -f "$DELETE_DOMAIN"; then
           source $DELETE_DOMAIN
@@ -371,7 +375,7 @@ sub_menu2() {
 
       1)
         # Create Database
-        CREATE_DATABASE=/root/Lempzy/scripts/database-menu/create-database.sh
+        CREATE_DATABASE=$LEMPZY_ROOT/scripts/database-menu/create-database.sh
 
         if test -f "$CREATE_DATABASE"; then
           source $CREATE_DATABASE
@@ -386,7 +390,7 @@ sub_menu2() {
       2)
 
         # Delete Database
-        DELETE_DATABASE=/root/Lempzy/scripts/database-menu/delete-database.sh
+        DELETE_DATABASE=$LEMPZY_ROOT/scripts/database-menu/delete-database.sh
 
         if test -f "$DELETE_DATABASE"; then
           source $DELETE_DATABASE
@@ -400,7 +404,7 @@ sub_menu2() {
 
       3)
         # Show Databases
-        SHOW_DATABASES=/root/Lempzy/scripts/database-menu/show-databases.sh
+        SHOW_DATABASES=$LEMPZY_ROOT/scripts/database-menu/show-databases.sh
 
         if test -f "$SHOW_DATABASES"; then
           source $SHOW_DATABASES
@@ -475,7 +479,7 @@ sub_menu3() {
 
       1)
         # Install Rainloop
-        RAINLOOP=/root/Lempzy/scripts/addons/rainloop.sh
+        RAINLOOP=$LEMPZY_ROOT/scripts/addons/rainloop.sh
 
         if test -f "$RAINLOOP"; then
           source $RAINLOOP
@@ -489,7 +493,7 @@ sub_menu3() {
 
       2)
         # Install Filerun
-        FILERUN=/root/Lempzy/scripts/addons/filerun.sh
+        FILERUN=$LEMPZY_ROOT/scripts/addons/filerun.sh
 
         if test -f "$FILERUN"; then
           source $FILERUN
@@ -503,7 +507,7 @@ sub_menu3() {
 
       3)
         # Install Invoiceninja
-        INVOICENINJA=/root/Lempzy/scripts/addons/invoiceninja.sh
+        INVOICENINJA=$LEMPZY_ROOT/scripts/addons/invoiceninja.sh
 
         if test -f "$INVOICENINJA"; then
           source $INVOICENINJA
@@ -579,7 +583,7 @@ sub_menu4() {
 
       1)
         # Install Laravel
-        LARAVEL=/root/Lempzy/scripts/addons/php-frameworks/laravel.sh
+        LARAVEL=$LEMPZY_ROOT/scripts/addons/php-frameworks/laravel.sh
 
         if test -f "$LARAVEL"; then
           source $LARAVEL
@@ -593,7 +597,7 @@ sub_menu4() {
 
       2)
         # Install Codeigniter
-        CODEIGNITER=/root/Lempzy/scripts/addons/php-frameworks/codeigniter.sh
+        CODEIGNITER=$LEMPZY_ROOT/scripts/addons/php-frameworks/codeigniter.sh
 
         if test -f "$CODEIGNITER"; then
           source $CODEIGNITER
@@ -607,7 +611,7 @@ sub_menu4() {
 
       3)
         # Install CakePHP
-        CAKEPHP=/root/Lempzy/scripts/addons/php-frameworks/cakephp.sh
+        CAKEPHP=$LEMPZY_ROOT/scripts/addons/php-frameworks/cakephp.sh
 
         if test -f "$CAKEPHP"; then
           source $CAKEPHP
@@ -621,7 +625,7 @@ sub_menu4() {
 
       4)
         # Install Symfony
-        SYMFONY=/root/Lempzy/scripts/addons/php-frameworks/symfony.sh
+        SYMFONY=$LEMPZY_ROOT/scripts/addons/php-frameworks/symfony.sh
 
         if test -f "$SYMFONY"; then
           source $SYMFONY
