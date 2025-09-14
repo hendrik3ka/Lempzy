@@ -33,22 +33,60 @@ validate_domain() {
     fi
 }
 
-# Function to check if domain is accessible
+# Function to get server's public IPv4 address
+get_server_ipv4() {
+    # Try multiple methods to get IPv4 address
+    local server_ip=""
+    
+    # Method 1: Try curl with IPv4 only
+    server_ip=$(curl -4 -s --connect-timeout 5 ifconfig.me 2>/dev/null)
+    if [ -n "$server_ip" ] && [[ $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo "$server_ip"
+        return 0
+    fi
+    
+    # Method 2: Try alternative service
+    server_ip=$(curl -4 -s --connect-timeout 5 ipv4.icanhazip.com 2>/dev/null)
+    if [ -n "$server_ip" ] && [[ $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo "$server_ip"
+        return 0
+    fi
+    
+    # Method 3: Try to get from network interface (Ubuntu/Debian)
+    server_ip=$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K\S+' | head -1)
+    if [ -n "$server_ip" ] && [[ $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo "$server_ip"
+        return 0
+    fi
+    
+    # Method 4: Fallback - get primary interface IP
+    server_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [ -n "$server_ip" ] && [[ $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo "$server_ip"
+        return 0
+    fi
+    
+    echo "unknown"
+    return 1
+}
+
+# Function to check if domain is accessible (warning only, non-blocking)
 check_domain_accessibility() {
     local domain="$1"
     echo "${yel}Checking if $domain is accessible...${end}"
     
-    # Check if domain resolves to this server's IP
-    local server_ip=$(curl -s ifconfig.me 2>/dev/null || echo "unknown")
-    local domain_ip=$(dig +short "$domain" 2>/dev/null | tail -n1)
+    # Get server's IPv4 address
+    local server_ip=$(get_server_ipv4)
+    local domain_ip=$(dig +short "$domain" 2>/dev/null | grep -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$' | head -1)
     
-    if [ "$domain_ip" = "$server_ip" ]; then
-        echo "${grn}Domain $domain resolves to this server ($server_ip)${end}"
+    if [ "$domain_ip" = "$server_ip" ] && [ "$server_ip" != "unknown" ]; then
+        echo "${grn}✓ Domain $domain resolves to this server ($server_ip)${end}"
         return 0
     else
-        echo "${yel}Warning: Domain $domain resolves to $domain_ip, but server IP is $server_ip${end}"
-        echo "${yel}Let's Encrypt may fail if domain doesn't point to this server${end}"
-        return 1
+        echo "${yel}⚠ Warning: Domain $domain resolves to $domain_ip, but server IP is $server_ip${end}"
+        echo "${yel}  Let's Encrypt may fail if domain doesn't point to this server${end}"
+        echo "${yel}  Continuing anyway as requested...${end}"
+        return 0  # Changed to return 0 (success) to continue process
     fi
 }
 
@@ -151,7 +189,7 @@ interactive_ssl_generation() {
     
     echo ""
     echo "${yel}Important: Make sure your domain points to this server before proceeding!${end}"
-    echo "${yel}Server IP: $(curl -s ifconfig.me 2>/dev/null || echo 'unknown')${end}"
+    echo "${yel}Server IP: $(get_server_ipv4)${end}"
     echo ""
     read -p "${cyn}Continue with SSL certificate generation? (y/n): ${end}" confirm
     

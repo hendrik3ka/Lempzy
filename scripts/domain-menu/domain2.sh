@@ -124,7 +124,15 @@ install_ssl() {
                  read -p "${cyn}Include www.$domain in certificate? (y/n): ${end}" include_www
                  
                  echo "${yel}Important: Make sure $domain points to this server!${end}"
-                 echo "${yel}Server IP: $(curl -s ifconfig.me 2>/dev/null || echo 'unknown')${end}"
+                  # Get server IPv4 address using multiple methods
+                  local server_ip=$(curl -4 -s --connect-timeout 5 ifconfig.me 2>/dev/null)
+                  if [ -z "$server_ip" ] || [[ ! $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+                      server_ip=$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K\S+' | head -1)
+                  fi
+                  if [ -z "$server_ip" ] || [[ ! $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+                      server_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+                  fi
+                  echo "${yel}Server IP: ${server_ip:-unknown}${end}"
                  read -p "${cyn}Continue? (y/n): ${end}" confirm
                  
                  if [[ $confirm =~ ^[Yy]$ ]]; then
