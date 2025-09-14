@@ -402,13 +402,7 @@ case $cache_choice in
     "2")
         echo "${grn}Installing Redis...${end}"
         
-        # Debug information
-        echo "${yel}DEBUG: SCRIPT_DIR = '$SCRIPT_DIR'${end}"
-        echo "${yel}DEBUG: Current working directory = ''${end}"
-        
         INSTALL_REDIS=$(pwd)/scripts/install/install_redis.sh
-        echo "${yel}DEBUG: INSTALL_REDIS path = '$INSTALL_REDIS'${end}"
-        echo "${yel}DEBUG: File exists check: $(test -f "$INSTALL_REDIS" && echo 'YES' || echo 'NO')${end}"
         
         # List contents of scripts/install directory for debugging
         if [ -d "$(pwd)/scripts/install" ]; then
@@ -615,22 +609,20 @@ case $ssl_choice in
         
         # Install OpenSSL
         INSTALL_OPENSSL=$(pwd)/scripts/install/install_openssl.sh
-        if check_command_exists "openssl" || check_package_installed "openssl"; then
-            echo "${grn}OpenSSL is already installed, skipping...${end}"
-        else
-            if test -f "$INSTALL_OPENSSL"; then
-                echo "${grn}Installing OpenSSL...${end}"
-                if source "$INSTALL_OPENSSL"; then
-                    echo "${grn}OpenSSL installed successfully${end}"
-                else
-                    add_failed_installation "OpenSSL"
-                fi
-                # No need to change directories since we use absolute paths
+       
+        if test -f "$INSTALL_OPENSSL"; then
+            echo "${grn}Installing OpenSSL...${end}"
+            if source "$INSTALL_OPENSSL"; then
+                echo "${grn}OpenSSL installed successfully${end}"
             else
-                echo "${red}Cannot find OpenSSL installation script${end}"
-                add_failed_installation "OpenSSL (script not found)"
+                add_failed_installation "OpenSSL"
             fi
+            # No need to change directories since we use absolute paths
+        else
+            echo "${red}Cannot find OpenSSL installation script${end}"
+            add_failed_installation "OpenSSL (script not found)"
         fi
+    
         
         # Install Let's Encrypt
         INSTALL_LETSENCRYPT=$(pwd)/scripts/install/install_letsencrypt.sh
