@@ -178,15 +178,15 @@ mariadb_choice=$(echo "$mariadb_choice" | tr -d '[:space:]')
 
 # Set MariaDB version based on user choice
 case $mariadb_choice in
-    1)
+    "1")
         SELECTED_MARIADB_VERSION="10.11"
         echo "${grn}Selected MariaDB 10.11 (LTS)${end}"
         ;;
-    2)
+    "2")
         SELECTED_MARIADB_VERSION="11.4"
         echo "${grn}Selected MariaDB 11.4 (LTS)${end}"
         ;;
-    3)
+    "3")
         SELECTED_MARIADB_VERSION="10.1"
         echo "${yel}Warning: MariaDB 10.1 is End-of-Life (EOL) and no longer receives security updates${end}"
         echo "${grn}Selected MariaDB 10.1 (Legacy)${end}"
@@ -238,27 +238,27 @@ php_choice=$(echo "$php_choice" | tr -d '[:space:]')
 
 # Set PHP version based on user choice
 case $php_choice in
-    1)
+    "1")
         SELECTED_PHP_VERSION="7.4"
         echo "${grn}Selected PHP 7.4${end}"
         ;;
-    2)
+    "2")
         SELECTED_PHP_VERSION="8.0"
         echo "${grn}Selected PHP 8.0${end}"
         ;;
-    3)
+    "3")
         SELECTED_PHP_VERSION="8.1"
         echo "${grn}Selected PHP 8.1${end}"
         ;;
-    4)
+    "4")
         SELECTED_PHP_VERSION="8.2"
         echo "${grn}Selected PHP 8.2${end}"
         ;;
-    5)
+    "5")
         SELECTED_PHP_VERSION="8.3"
         echo "${grn}Selected PHP 8.3${end}"
         ;;
-    6|"")
+    "6"|"")
         SELECTED_PHP_VERSION="auto"
         echo "${grn}Using auto-detection based on OS version${end}"
         ;;
@@ -318,7 +318,7 @@ cache_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
 cache_choice=$(echo "$cache_choice" | tr -d '[:space:]')
 
 case $cache_choice in
-    1)
+    "1")
         echo "${grn}Installing Memcached...${end}"
         INSTALL_MEMCACHED=scripts/install/install_memcached.sh
         
@@ -339,7 +339,7 @@ case $cache_choice in
             fi
         fi
         ;;
-    2)
+    "2")
         echo "${grn}Installing Redis...${end}"
         INSTALL_REDIS=scripts/install/install_redis.sh
         
@@ -360,7 +360,7 @@ case $cache_choice in
             fi
         fi
         ;;
-    3)
+    "3")
         echo "${grn}Installing both Memcached and Redis...${end}"
         
         # Install Memcached
@@ -401,7 +401,7 @@ case $cache_choice in
             fi
         fi
         ;;
-    4)
+    "4")
         echo "${yel}Skipping caching solution installation...${end}"
         ;;
     *)
@@ -494,7 +494,7 @@ ssl_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
 ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
 
 case $ssl_choice in
-    1)
+    "1")
         echo "${grn}Installing OpenSSL...${end}"
         INSTALL_OPENSSL=scripts/install/install_openssl.sh
         
@@ -515,7 +515,7 @@ case $ssl_choice in
             fi
         fi
         ;;
-    2)
+    "2")
         echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
         INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
         
@@ -536,7 +536,7 @@ case $ssl_choice in
             fi
         fi
         ;;
-    3)
+    "3")
         echo "${grn}Installing both OpenSSL and Let's Encrypt...${end}"
         
         # Install OpenSSL
@@ -577,7 +577,7 @@ case $ssl_choice in
             fi
         fi
         ;;
-    4)
+    "4")
         echo "${yel}Skipping SSL installation...${end}"
         ;;
     *)
