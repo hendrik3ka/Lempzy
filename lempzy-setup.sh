@@ -571,31 +571,21 @@ echo ""
 EOF
 
     echo ""
-    # Return to the script directory
-    cd "$(dirname "$0")"
+    cd && cd Lempzy
     sleep 1
 }
 
 change_login_greetings
 
 # Menu Script Permission Setting
-# Ensure we're in the correct directory
-SCRIPT_DIR="$(dirname "$0")"
-cd "$SCRIPT_DIR"
-
-# Check if lempzy.sh exists and copy it
-if [ -f "scripts/lempzy.sh" ]; then
-    cp scripts/lempzy.sh /root
-    dos2unix /root/lempzy.sh
-    chmod +x /root/lempzy.sh
-    echo "${grn}Menu script installed successfully${end}"
-else
-    echo "${red}Warning: scripts/lempzy.sh not found, menu script not installed${end}"
-    add_failed_installation "Menu Script (lempzy.sh not found)"
-fi
+cp scripts/lempzy.sh /root
+dos2unix /root/lempzy.sh
+chmod +x /root/lempzy.sh
 
 # Success Prompt
 clear
+
+# Success Prompt
 echo "Lemzpy - LEMP Auto Installer BY Miguel Emmara $(date)"
 echo "******************************************************************************************"
 echo "              *   *    *****    *         ***      ***     *   *    ***** 	"
