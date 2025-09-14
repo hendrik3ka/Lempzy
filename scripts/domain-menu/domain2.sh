@@ -97,11 +97,82 @@ add_domain_nginx() {
 
 # Install ssl
 install_ssl() {
+     echo "${grn}=== SSL CERTIFICATE SETUP ===${end}"
+     echo "${yel}Choose your SSL certificate type:${end}"
+     echo "${blu}1) Let's Encrypt (Free, Trusted, Auto-renewal)${end}"
+     echo "${blu}2) Self-signed OpenSSL (Quick setup, Browser warning)${end}"
+     echo ""
+     read -p "${cyn}Enter your choice (1-2): ${end}" ssl_choice
+     
+     case $ssl_choice in
+         1)
+             # Check if Let's Encrypt is installed
+             if command -v certbot >/dev/null 2>&1; then
+                 echo "${grn}Setting up Let's Encrypt SSL certificate...${end}"
+                 
+                 # Get email for Let's Encrypt
+                 read -p "${cyn}Enter your email for SSL notifications: ${end}" ssl_email
+                 
+                 # Validate email format
+                 if [[ ! $ssl_email =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                     echo "${red}Invalid email format. Using self-signed certificate instead.${end}"
+                     install_openssl_certificate
+                     return
+                 fi
+                 
+                 # Ask about www subdomain
+                 read -p "${cyn}Include www.$domain in certificate? (y/n): ${end}" include_www
+                 
+                 echo "${yel}Important: Make sure $domain points to this server!${end}"
+                 echo "${yel}Server IP: $(curl -s ifconfig.me 2>/dev/null || echo 'unknown')${end}"
+                 read -p "${cyn}Continue? (y/n): ${end}" confirm
+                 
+                 if [[ $confirm =~ ^[Yy]$ ]]; then
+                     # Generate Let's Encrypt certificate
+                     if [[ $include_www =~ ^[Yy]$ ]]; then
+                         if certbot --nginx -d "$domain" -d "www.$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
+                             echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+                         else
+                             echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
+                             install_openssl_certificate
+                         fi
+                     else
+                         if certbot --nginx -d "$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
+                             echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+                         else
+                             echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
+                             install_openssl_certificate
+                         fi
+                     fi
+                 else
+                     echo "${yel}Let's Encrypt cancelled. Installing self-signed certificate...${end}"
+                     install_openssl_certificate
+                 fi
+             else
+                 echo "${red}Let's Encrypt (Certbot) is not installed!${end}"
+                 echo "${yel}Installing self-signed certificate instead...${end}"
+                 install_openssl_certificate
+             fi
+             ;;
+         2)
+             install_openssl_certificate
+             ;;
+         *)
+             echo "${red}Invalid choice. Installing self-signed certificate...${end}"
+             install_openssl_certificate
+             ;;
+     esac
+}
+
+# Function to install OpenSSL self-signed certificate
+install_openssl_certificate() {
+     echo "${grn}Installing self-signed SSL certificate...${end}"
      mkdir -p /etc/ssl/$domain/
      cd /etc/ssl/$domain/
      openssl req -new -newkey rsa:2048 -sha256 -nodes -out $domain.csr -keyout $domain.key -subj "/C=US/ST=Rhode Island/L=East Greenwich/O=Fidelity Test/CN=$domain"
      openssl x509 -req -days 36500 -in $domain.csr -signkey $domain.key -out $domain.crt
      service nginx reload
+     echo "${yel}Note: Self-signed certificates will show browser warnings${end}"
 }
 
 # Install Wordpress

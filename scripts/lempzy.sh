@@ -209,13 +209,14 @@ sub_menu1() {
   echo ""
   echo "  ${grn}1) ADD DOMAIN / SUB-DOMAIN"
   echo "  2) ADD DOMAIN / SUB-DOMAIN + INSTALL WORDPRESS"
-  echo "  3) SHOW CURRENT DOMAIN"
-  echo "  4) BACKUP WEBSITE"
-  echo "  5) DELETE DOMAIN / SUB-DOMAIN"
-  echo "  6) BACK TO MAIN MENU <"
-  echo "  7) EXIT MENU${end}"
+  echo "  3) ADD LET'S ENCRYPT SSL TO EXISTING DOMAIN"
+  echo "  4) SHOW CURRENT DOMAIN"
+  echo "  5) BACKUP WEBSITE"
+  echo "  6) DELETE DOMAIN / SUB-DOMAIN"
+  echo "  7) BACK TO MAIN MENU <"
+  echo "  8) EXIT MENU${end}"
   echo ""
-  read -p "Choose your option [1-7]: " sub_menu_1
+  read -p "Choose your option [1-8]: " sub_menu_1
 
   while [ sub_menu_1 != '' ]; do
     if [[ $sub_menu_1 = "" ]]; then
@@ -252,6 +253,20 @@ sub_menu1() {
         ;;
 
       3)
+        # ADD LET'S ENCRYPT SSL TO EXISTING DOMAIN
+        LETSENCRYPT_AUTO=/root/Lempzy/scripts/domain-menu/letsencrypt_auto.sh
+
+        if test -f "$LETSENCRYPT_AUTO"; then
+          source $LETSENCRYPT_AUTO
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find Let's Encrypt automation script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      4)
         # Show Domain
         SHOW_DOMAIN=/root/Lempzy/scripts/domain-menu/showdomain.sh
 
@@ -265,7 +280,7 @@ sub_menu1() {
         sub_menu1
         ;;
 
-      4)
+      5)
         # Back Up Web Data
         BACKUP_WEB_DATA=/root/Lempzy/scripts/domain-menu/backupwebdata.sh
 
@@ -279,7 +294,7 @@ sub_menu1() {
         sub_menu1
         ;;
 
-      5)
+      6)
         # DELETE DOMAIN / SUB-DOMAIN
         DELETE_DOMAIN=/root/Lempzy/scripts/domain-menu/delete.sh
 
@@ -293,12 +308,12 @@ sub_menu1() {
         sub_menu1
         ;;
 
-      6)
+      7)
         clear
         main_menu
         ;;
 
-      7)
+      8)
         clear
         echo "Bye!"
         echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"

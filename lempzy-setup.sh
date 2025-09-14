@@ -488,9 +488,9 @@ case $ssl_choice in
         INSTALL_OPENSSL=scripts/install/install_openssl.sh
         
         # Check if openssl is already installed
-        if check_command_exists "openssl" || check_package_installed "openssl"; then
-            echo "${grn}OpenSSL is already installed, skipping...${end}"
-        else
+        # if check_command_exists "openssl" || check_package_installed "openssl"; then
+        #     echo "${grn}OpenSSL is already installed, skipping...${end}"
+        # else
             if test -f "$INSTALL_OPENSSL"; then
                 if source "$INSTALL_OPENSSL"; then
                     echo "${grn}OpenSSL installed successfully${end}"
@@ -502,7 +502,7 @@ case $ssl_choice in
                 echo "${red}Cannot find OpenSSL installation script${end}"
                 add_failed_installation "OpenSSL (script not found)"
             fi
-        fi
+        # fi
         ;;
     "2")
         echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
