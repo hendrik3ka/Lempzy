@@ -165,6 +165,8 @@ echo "${blu}2) MariaDB 11.4 (LTS - Latest)${end}"
 echo "${blu}3) MariaDB 10.1 (Legacy - EOL)${end}"
 echo ""
 mariadb_choice=$(countdown_input "${cyn}Enter your choice (1-3): ${end}" "1")
+# Trim whitespace from input
+mariadb_choice=$(echo "$mariadb_choice" | tr -d '[:space:]')
 
 # Set MariaDB version based on user choice
 case $mariadb_choice in
@@ -223,6 +225,8 @@ echo "${blu}5) PHP 8.3 ${grn}[DEFAULT]${end}${end}"
 echo "${blu}6) Auto-detect based on OS${end}"
 echo ""
 php_choice=$(countdown_input "${cyn}Enter your choice (1-6): ${end}" "5")
+# Trim whitespace from input
+php_choice=$(echo "$php_choice" | tr -d '[:space:]')
 
 # Set PHP version based on user choice
 case $php_choice in
@@ -302,6 +306,8 @@ echo "${blu}3) Install both Memcached and Redis${end}"
 echo "${blu}4) Skip caching installation${end}"
 echo ""
 cache_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
+# Trim whitespace from input
+cache_choice=$(echo "$cache_choice" | tr -d '[:space:]')
 
 case $cache_choice in
     1)
@@ -476,6 +482,8 @@ echo "${blu}3) Install both OpenSSL and Let's Encrypt${end}"
 echo "${blu}4) Skip SSL installation${end}"
 echo ""
 ssl_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
+# Trim whitespace from input
+ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
 
 case $ssl_choice in
     1)
