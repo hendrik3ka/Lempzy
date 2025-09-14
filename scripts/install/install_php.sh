@@ -247,27 +247,31 @@ install_specific_php_version() {
                ;;
      esac
      
-     # Remove any conflicting PHP versions if they exist
-     echo "${grn}Cleaning up conflicting PHP versions...${end}"
-     apt-get purge php7.* php8.* -y 2>/dev/null || true
+     # Set the selected PHP version as default
+     echo "${grn}Setting PHP $php_version as default...${end}"
      
-     # Reinstall the selected version
-     case $php_version in
-          "7.4")
-               apt install php7.4-fpm php7.4-mysql -y
-               ;;
-          "8.0")
-               apt install php8.0-fpm php8.0-mysql -y
-               ;;
-          "8.1")
-               apt install php8.1-fpm php8.1-mysql -y
-               ;;
-          "8.2")
-               apt install php8.2-fpm php8.2-mysql -y
-               ;;
-          "8.3")
-               apt install php8.3-fpm php8.3-mysql -y
-               ;;
+     # Install alternatives for PHP binaries
+     update-alternatives --install /usr/bin/php php /usr/bin/php$php_version 100
+     update-alternatives --install /usr/bin/phar phar /usr/bin/phar$php_version 100
+     update-alternatives --install /usr/bin/phar.phar phar.phar /usr/bin/phar.phar$php_version 100
+     
+     # Set the selected PHP version as default
+     update-alternatives --set php /usr/bin/php$php_version 2>/dev/null || true
+     update-alternatives --set phar /usr/bin/phar$php_version 2>/dev/null || true
+     update-alternatives --set phar.phar /usr/bin/phar.phar$php_version 2>/dev/null || true
+     
+     # Disable other PHP-FPM services and enable the selected one
+     systemctl stop php*-fpm 2>/dev/null || true
+     systemctl disable php*-fpm 2>/dev/null || true
+     systemctl enable php$php_version-fpm
+     systemctl start php$php_version-fpm
+     
+     # Verify installation
+     if php -v | grep -q "PHP $php_version"; then
+          echo "${grn}PHP $php_version installed and configured successfully${end}"
+     else
+          echo "${yel}Warning: PHP version verification failed, but installation completed${end}"
+     fi
      esac
      
      echo ""
