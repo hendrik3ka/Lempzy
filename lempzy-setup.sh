@@ -137,10 +137,16 @@ UPDATE_OS=scripts/install/update_os.sh
 
 if test -f "$UPDATE_OS"; then
      source $UPDATE_OS
-     cd && cd && cd Lempzy
+     # Check if Lempzy directory exists before navigating to it
+     if [ -d "$HOME/Lempzy" ]; then
+          cd && cd && cd Lempzy
+     else
+          echo "${yel}Lempzy directory not found, staying in current directory${end}"
+          # Continue with script execution from current directory
+     fi
 else
-     echo "Cannot Update OS"
-     exit
+     echo "${red}Cannot find OS update script, continuing without OS update${end}"
+     # Continue script execution instead of exiting
 fi
 
 # Installing UFW Firewall
