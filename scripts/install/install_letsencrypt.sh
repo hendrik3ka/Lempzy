@@ -20,19 +20,32 @@ install_letsencrypt() {
     # Update package list
     apt update
     
-    # Install snapd if not already installed
-    apt install snapd -y
+    # Try to install certbot via snap (recommended method)
+    echo "${yel}Attempting to install certbot via snap...${end}"
     
-    # Install certbot via snap (recommended method)
-    snap install core; snap refresh core
-    snap install --classic certbot
-    
-    # Create symbolic link for certbot command
-    ln -sf /snap/bin/certbot /usr/bin/certbot
-    
-    # Install certbot nginx plugin
-    snap set certbot trust-plugin-with-root=ok
-    snap install certbot-dns-cloudflare
+    if apt install snapd -y && snap install core && snap refresh core && snap install --classic certbot; then
+        echo "${grn}Certbot installed successfully via snap${end}"
+        
+        # Create symbolic link for certbot command
+        ln -sf /snap/bin/certbot /usr/bin/certbot
+        
+        # Install certbot nginx plugin
+        snap set certbot trust-plugin-with-root=ok
+        snap install certbot-dns-cloudflare 2>/dev/null || true
+        
+    else
+        echo "${yel}Snap installation failed. Trying alternative installation method...${end}"
+        
+        # Alternative installation using apt (fallback method)
+        echo "${yel}Installing certbot via apt package manager...${end}"
+        
+        if apt install -y certbot python3-certbot-nginx; then
+            echo "${grn}Certbot installed successfully via apt${end}"
+        else
+            echo "${red}Both snap and apt installation methods failed${end}"
+            return 1
+        fi
+    fi
     
     # Create directory for SSL certificates
     mkdir -p /etc/letsencrypt
