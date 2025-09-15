@@ -86,22 +86,35 @@ countdown_input() {
     local prompt="$1"
     local default_choice="$2"
     local choice=""
-    
-    # Send display output to stderr so it doesn't get captured in return value
-    echo "${yel}Auto-selecting default option [$default_choice] in 60 seconds...${end}" >&2
+    local timeout=60  # Timeout in seconds
+    local countdown=$timeout
+
+    # Send display output to stderr
+    echo "${yel}Auto-selecting default option [$default_choice] in $timeout seconds...${end}" >&2
     echo "${grn}Press Enter to use default, or type your choice:${end}" >&2
     echo "" >&2
-    
-    # Direct input without timeout for now to test
-    printf "${cyn}$prompt${end}" >&2
-    read choice
-    
+
+    # Display countdown timer
+    while [ $countdown -gt 0 ]; do
+        printf "\r${cyn}$prompt (auto-select in %2d seconds): ${end}" "$countdown" >&2
+        # Attempt to read input with a 1-second timeout
+        if read -t 1 -r choice; then
+            # Input received, break the loop
+            break
+        fi
+        ((countdown--))
+    done
+
+    # If no input was provided (timeout or empty input), use default
     if [ -z "$choice" ]; then
         choice="$default_choice"
-        echo "${yel}Using default: $default_choice${end}" >&2
+        echo "" >&2  # Newline for clean output
+        echo "${yel}No input provided, using default: $default_choice${end}" >&2
+    else
+        echo "" >&2  # Newline for clean output
     fi
-    
-    # Return only the choice to stdout
+
+    # Return the choice to stdout
     echo "$choice"
 }
 

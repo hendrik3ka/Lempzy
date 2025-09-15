@@ -95,6 +95,9 @@ add_domain_nginx() {
      systemctl reload nginx
 }
 
+# Global variable to track SSL method used
+SSL_METHOD=""
+
 # Install ssl
 install_ssl() {
      echo "${grn}=== SSL CERTIFICATE SETUP ===${end}"
@@ -140,6 +143,7 @@ install_ssl() {
                      if [[ $include_www =~ ^[Yy]$ ]]; then
                          if certbot --nginx -d "$domain" -d "www.$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
                              echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+                             SSL_METHOD="letsencrypt"
                          else
                              echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
                              install_openssl_certificate
@@ -147,6 +151,7 @@ install_ssl() {
                      else
                          if certbot --nginx -d "$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
                              echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+                             SSL_METHOD="letsencrypt"
                          else
                              echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
                              install_openssl_certificate
@@ -179,6 +184,7 @@ install_openssl_certificate() {
      cd /etc/ssl/$domain/
      openssl req -new -newkey rsa:2048 -sha256 -nodes -out $domain.csr -keyout $domain.key -subj "/C=US/ST=Rhode Island/L=East Greenwich/O=Fidelity Test/CN=$domain"
      openssl x509 -req -days 36500 -in $domain.csr -signkey $domain.key -out $domain.crt
+     SSL_METHOD="openssl"
      service nginx reload
      echo "${yel}Note: Self-signed certificates will show browser warnings${end}"
 }
@@ -246,22 +252,25 @@ install_nginx_cache() {
 add_vhost() {
      configName=$domain
      cd $sitesAvailable
-     # Get the directory where this script is located dynamically
-     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-     LEMPZY_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")" 
-     
-     cp "$LEMPZY_ROOT/scripts/vhost-fastcgi" $sitesAvailable$domain
+     cp /root/Lempzy/scripts/vhost-fastcgi $sitesAvailable$domain
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
+     
+     # Configure SSL certificate paths based on SSL method
+     if [ "$SSL_METHOD" = "letsencrypt" ]; then
+         # Use Let's Encrypt certificate paths
+         sed -i "s|ssl_certificate /etc/ssl/$domain/$domain.crt;|ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;|g" $sitesAvailable$configName
+         sed -i "s|ssl_certificate_key /etc/ssl/$domain/$domain.key;|ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;|g" $sitesAvailable$configName
+         echo "${grn}Configured nginx to use Let's Encrypt certificates${end}"
+     else
+         # Use OpenSSL certificate paths (default)
+         echo "${grn}Configured nginx to use OpenSSL certificates${end}"
+     fi
 }
 
 # PHP POOL SETTING
 setting_php_pool() {
-     # Get the directory where this script is located dynamically
-     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-     LEMPZY_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")" 
-     
-     cp "$LEMPZY_ROOT/scripts/phpdotdeb" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
+     cp /root/Lempzy/scripts/phpdotdeb /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      sed -i "s/domain.com/$domain/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      sed -i "s/phpX.X/php$PHP_VERSION/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      echo "" >>/etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf

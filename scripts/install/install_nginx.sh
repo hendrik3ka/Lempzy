@@ -28,6 +28,11 @@ configuring_php_fpm_nginx() {
      echo "${grn}Configuring to make PHP-FPM working with Nginx ...${end}"
      echo ""
      sleep 3
+     # rm -rf /etc/nginx/nginx.conf
+     # cd /etc/nginx/
+     # cp /root/Lempzy/scripts/nginx.conf nginx.conf
+     # dos2unix /etc/nginx/nginx.conf
+     # cd
      
      # Get the directory where this script is located
      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
