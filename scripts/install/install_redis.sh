@@ -47,6 +47,52 @@ install_redis() {
         return 1
     fi
     
+    # Install PHP Redis extension
+    echo "${grn}Installing PHP extension for Redis...${end}"
+
+    # Detect installed PHP version (major.minor) if PHP is available
+    ACTUAL_PHP_VERSION=""
+    if command -v php >/dev/null 2>&1; then
+        ACTUAL_PHP_VERSION="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || true)"
+    fi
+
+    # Try generic php-redis package first; if not available, try version-specific package
+    if apt install -y php-redis; then
+        :
+    elif [ -n "$ACTUAL_PHP_VERSION" ]; then
+        apt install -y "php${ACTUAL_PHP_VERSION}-redis" || true
+    fi
+
+    # Enable the redis extension for all SAPI if phpenmod is available
+    if command -v phpenmod >/dev/null 2>&1; then
+        phpenmod -v ALL redis 2>/dev/null || phpenmod redis 2>/dev/null || true
+    fi
+
+    # Restart PHP-FPM (if present) to load the redis extension
+    FPM_SERVICE=""
+    if [ -n "$ACTUAL_PHP_VERSION" ] && systemctl list-unit-files | grep -q "php${ACTUAL_PHP_VERSION}-fpm.service"; then
+        FPM_SERVICE="php${ACTUAL_PHP_VERSION}-fpm"
+    elif systemctl list-units | grep -q "php-fpm.service"; then
+        FPM_SERVICE="php-fpm"
+    else
+        CAND="$(systemctl list-unit-files | awk '/php[0-9]+\.[0-9]+-fpm\.service/{print $1}' | head -n1)"
+        if [ -n "$CAND" ]; then
+            FPM_SERVICE="${CAND%.service}"
+        fi
+    fi
+
+    if [ -n "$FPM_SERVICE" ]; then
+        systemctl enable "$FPM_SERVICE" >/dev/null 2>&1 || true
+        systemctl restart "$FPM_SERVICE" || true
+    fi
+
+    # Verify PHP Redis extension installation
+    if command -v php >/dev/null 2>&1 && php -m | grep -qi "^redis$\|^redis "; then
+        echo "${grn}PHP Redis extension installed and enabled successfully${end}"
+    else
+        echo "${yel}PHP Redis extension may not be installed or enabled. Ensure the appropriate package exists for your PHP version.${end}"
+    fi
+    
     echo ""
     echo "${grn}Redis Server installed and configured successfully${end}"
     echo "${yel}Redis is listening on 127.0.0.1:6379${end}"
