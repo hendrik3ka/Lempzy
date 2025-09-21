@@ -360,10 +360,11 @@ case $cache_choice in
     "2")
         echo "${grn}Installing Redis...${end}"
         INSTALL_REDIS=scripts/install/install_redis.sh
+        INSTALL_PHP_REDIS=scripts/install/install_php_redis.sh
         
         # Check if redis is already installed
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
-            echo "${grn}Redis is already installed, skipping...${end}"
+            echo "${grn}Redis is already installed, skipping server installation...${end}"
         else
             if test -f "$INSTALL_REDIS"; then
                 if source "$INSTALL_REDIS"; then
@@ -375,6 +376,24 @@ case $cache_choice in
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
+            fi
+        fi
+
+        # Check if PHP Redis extension is installed; if not, install it
+        if php -m 2>/dev/null | grep -qi "^redis$\|^redis "; then
+            echo "${grn}PHP Redis extension is already installed, skipping...${end}"
+        else
+            if test -f "$INSTALL_PHP_REDIS"; then
+                echo "${grn}Installing PHP Redis extension...${end}"
+                if source "$INSTALL_PHP_REDIS"; then
+                    echo "${grn}PHP Redis extension installed successfully${end}"
+                else
+                    add_failed_installation "PHP Redis extension"
+                fi
+                cd && cd Lempzy
+            else
+                echo "${red}Cannot find PHP Redis extension installation script${end}"
+                add_failed_installation "PHP Redis extension (script not found)"
             fi
         fi
         ;;
@@ -402,8 +421,9 @@ case $cache_choice in
         
         # Install Redis
         INSTALL_REDIS=scripts/install/install_redis.sh
+        INSTALL_PHP_REDIS=scripts/install/install_php_redis.sh
         if check_command_exists "redis-server" || check_package_installed "redis-server"; then
-            echo "${grn}Redis is already installed, skipping...${end}"
+            echo "${grn}Redis is already installed, skipping server installation...${end}"
         else
             if test -f "$INSTALL_REDIS"; then
                 echo "${grn}Installing Redis...${end}"
@@ -416,6 +436,24 @@ case $cache_choice in
             else
                 echo "${red}Cannot find Redis installation script${end}"
                 add_failed_installation "Redis (script not found)"
+            fi
+        fi
+
+        # Check if PHP Redis extension is installed; if not, install it
+        if php -m 2>/dev/null | grep -qi "^redis$\|^redis "; then
+            echo "${grn}PHP Redis extension is already installed, skipping...${end}"
+        else
+            if test -f "$INSTALL_PHP_REDIS"; then
+                echo "${grn}Installing PHP Redis extension...${end}"
+                if source "$INSTALL_PHP_REDIS"; then
+                    echo "${grn}PHP Redis extension installed successfully${end}"
+                else
+                    add_failed_installation "PHP Redis extension"
+                fi
+                cd && cd Lempzy
+            else
+                echo "${red}Cannot find PHP Redis extension installation script${end}"
+                add_failed_installation "PHP Redis extension (script not found)"
             fi
         fi
         ;;
