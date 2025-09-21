@@ -30,11 +30,15 @@ install_php_redis() {
         return 0
     fi
 
-    # Try generic php-redis package first; if not available, try version-specific package
-    if apt install -y php-redis; then
-        :
+    # Try version-specific package first; if not available, try generic php-redis
+    if [ -n "$ACTUAL_PHP_VERSION" ]; then
+        if apt install -y "php${ACTUAL_PHP_VERSION}-redis"; then
+            :
+        else
+            apt install -y php-redis || true
+        fi
     else
-        apt install -y "php${ACTUAL_PHP_VERSION}-redis" || true
+        apt install -y php-redis || true
     fi
 
     # Enable the redis extension for all SAPIs if phpenmod is available
