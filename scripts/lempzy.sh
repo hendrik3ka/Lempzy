@@ -52,9 +52,10 @@ main_menu() {
   echo "  8) REFRESH SERVER"
   echo "  9) CLEAR CACHE RAM"
   echo "  10) ${red}RESTART SERVER${end}"
-  echo "  ${grn}11) EXIT MENU${end}"
+  echo "  11) MIGRATE"
+  echo "  ${grn}12) EXIT MENU${end}"
   echo ""
-  read -p "Choose your option [1-10]: " choice
+  read -p "Choose your option [1-12]: " choice
 
   while [ choice != '' ]; do
     if [[ $choice = "" ]]; then
@@ -159,6 +160,20 @@ main_menu() {
         ;;
 
       11)
+        # Migrate
+        MIGRATE_SCRIPT=/root/Lempzy/scripts/main-menu/migrate.sh
+
+        if test -f "$MIGRATE_SCRIPT"; then
+          source $MIGRATE_SCRIPT
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find Migrate script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      12)
         clear
         echo "Bye!"
         echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
