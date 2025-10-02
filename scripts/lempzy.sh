@@ -53,9 +53,10 @@ main_menu() {
   echo "  9) CLEAR CACHE RAM"
   echo "  10) ${red}RESTART SERVER${end}"
   echo "  11) MIGRATE"
-  echo "  ${grn}12) EXIT MENU${end}"
+  echo "  12) IPv6 CONFIGURATION"
+  echo "  ${grn}13) EXIT MENU${end}"
   echo ""
-  read -p "Choose your option [1-12]: " choice
+  read -p "Choose your option [1-13]: " choice
 
   while [ choice != '' ]; do
     if [[ $choice = "" ]]; then
@@ -174,6 +175,20 @@ main_menu() {
         ;;
 
       12)
+        # IPv6 Configuration
+        IPV6_CONFIG_SCRIPT=/root/Lempzy/scripts/main-menu/ipv6.sh
+
+        if test -f "$IPV6_CONFIG_SCRIPT"; then
+          source $IPV6_CONFIG_SCRIPT
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find IPv6 Configuration script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      13)
         clear
         echo "Bye!"
         echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
