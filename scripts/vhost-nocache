@@ -1,12 +1,29 @@
 server {
   listen 80;
-  listen 443 ssl http2;
+  listen [::]:80;
+  listen 443 ssl;
+  listen [::]:443 ssl;
   ssl_certificate /etc/ssl/domain.com/domain.com.crt;
   ssl_certificate_key /etc/ssl/domain.com/domain.com.key;
+  http2 on;
   root /var/www/domain.com;
   index index.php index.html index.htm;
   error_log /var/log/nginx/domain.com.error.log;
   server_name domain.com www.domain.com;
+
+  # Serve ACME challenge files for Let's Encrypt over both HTTP and HTTPS.
+  # Without this location block the HTTP-01 challenge may be redirected or
+  # handled by your application, causing certificate issuance to fail. The
+  # alias points to a shared directory used by Certbot when using the webroot
+  # method.  See https://letsencrypt.org/docs/challenge-types/#http-01-challenge
+  # for details.
+  location ^~ /.well-known/acme-challenge/ {
+      alias /var/www/_letsencrypt/.well-known/acme-challenge/;
+      default_type "text/plain";
+      try_files $uri =404;
+      access_log off;
+      add_header Cache-Control "no-cache";
+  }
 
    location / {
        try_files $uri $uri/ /index.php?$args;
