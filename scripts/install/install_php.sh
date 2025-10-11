@@ -85,8 +85,8 @@ install_php() {
           apt-get install php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y
           echo ""
           sleep 1
-          
-     elif [[ "${OS_VERSION}" == "25.02" ]]; then
+
+     elif [[ "${OS_VERSION}" == "25.04" ]]; then
           echo "${grn}Installing PHP 8.3...${end}"
           echo ""
           sleep 3
