@@ -54,9 +54,10 @@ main_menu() {
   echo "  10) ${red}RESTART SERVER${end}"
   echo "  11) MIGRATE"
   echo "  12) IPv6 CONFIGURATION"
-  echo "  ${grn}13) EXIT MENU${end}"
+  echo "  13) UPDATE LEMPZY"
+  echo "  ${grn}14) EXIT MENU${end}"
   echo ""
-  read -p "Choose your option [1-13]: " choice
+  read -p "Choose your option [1-14]: " choice
 
   while [ choice != '' ]; do
     if [[ $choice = "" ]]; then
@@ -189,6 +190,44 @@ main_menu() {
         ;;
 
       13)
+        # Update Lempzy
+        clear
+        echo "${grn}Updating Lempzy...${end}"
+        echo ""
+        
+        # Navigate to root directory
+        cd /root
+        
+        # Remove old Lempzy directory if it exists
+        if [ -d "Lempzy" ]; then
+          echo "${yel}Removing old Lempzy directory...${end}"
+          rm -rf Lempzy
+        fi
+        
+        # Clone the latest version
+        echo "${grn}Cloning latest Lempzy from GitHub...${end}"
+        if git clone --branch main https://github.com/hendrik3ka/Lempzy.git; then
+          echo "${grn}Successfully cloned Lempzy repository${end}"
+          
+          # Set permissions for setup script
+          chmod +x Lempzy/lempzy-setup.sh
+          
+          # Copy lempzy.sh script (like lines 805-807 in lempzy-setup.sh)
+          cp Lempzy/scripts/lempzy.sh /root
+          dos2unix /root/lempzy.sh
+          chmod +x /root/lempzy.sh
+          
+          echo "${grn}Lempzy has been successfully updated!${end}"
+          echo "${yel}Please restart the menu to use the updated version.${end}"
+        else
+          echo "${red}Failed to clone Lempzy repository. Please check your internet connection.${end}"
+        fi
+        
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      14)
         clear
         echo "Bye!"
         echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
