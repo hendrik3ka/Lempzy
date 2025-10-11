@@ -12,7 +12,7 @@ if ! source "$TELEGRAM_NOTIFY_SCRIPT"; then
 fi
 
 # Parent directory for domains
-WWW_DIR="/home/mindforest.top/"
+WWW_DIR="/var/www"
 
 # Events to monitor for files and folders
 MONITOR_EVENTS="create,delete,modify,move"
