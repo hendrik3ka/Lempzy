@@ -1,0 +1,19 @@
+[Unit]
+Description=Domain Change Monitor Script
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /root/lempzy/domain_monitor.sh
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+User=root
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

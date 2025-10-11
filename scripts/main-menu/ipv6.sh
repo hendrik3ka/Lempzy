@@ -36,7 +36,7 @@ nginx_installed() { command -v nginx >/dev/null 2>&1; }
 nginx_has_ipv6_listen() {
   local f="$1"
   [[ -f "$f" ]] || return 1
-  # Check specific file for any IPv6 listen directive
+  # Check specific file for any active (uncommented) IPv6 listen directive
   grep -qE "^\s*listen\s*\[::\]" "$f"
 }
 
@@ -87,9 +87,36 @@ ensure_ufw_http_https_allowed() {
 ensure_ipv6_listen_in_file() {
   local f="$1"
   [[ -f "$f" ]] || return 0
-  # Add IPv6 listeners if missing
-  grep -qE "^\s*listen\s*\[::\]:80;" "$f" || sed -i '/^\s*listen\s*80;\s*$/a \    listen [::]:80;' "$f"
-  grep -qE "^\s*listen\s*\[::\]:443\s*ssl\s*http2;" "$f" || sed -i '/^\s*listen\s*443\s*ssl\s*http2;\s*$/a \    listen [::]:443 ssl http2;' "$f"
+  
+  # Check if IPv6 listeners are already active (uncommented)
+  if grep -qE "^\s*listen\s*\[::\]:80;" "$f" && grep -qE "^\s*listen\s*\[::\]:443\s*ssl;" "$f"; then
+    return 0  # Already configured
+  fi
+  
+  # Try to uncomment existing commented IPv6 lines first
+  local updated=0
+  
+  # Uncomment IPv6 port 80 listener if it exists as comment
+  if grep -qE "^\s*#\s*listen\s*\[::\]:80;" "$f"; then
+    sed -i 's/^\s*#\s*listen\s*\[::\]:80;/  listen [::]:80;/' "$f"
+    updated=1
+  elif ! grep -qE "^\s*listen\s*\[::\]:80;" "$f"; then
+    # Add IPv6 port 80 listener if it doesn't exist at all
+    sed -i '/^\s*listen\s*80;\s*$/a \  listen [::]:80;' "$f"
+    updated=1
+  fi
+  
+  # Uncomment IPv6 port 443 listener if it exists as comment
+  if grep -qE "^\s*#\s*listen\s*\[::\]:443\s*ssl;" "$f"; then
+    sed -i 's/^\s*#\s*listen\s*\[::\]:443\s*ssl;/  listen [::]:443 ssl;/' "$f"
+    updated=1
+  elif ! grep -qE "^\s*listen\s*\[::\]:443\s*ssl;" "$f"; then
+    # Add IPv6 port 443 listener if it doesn't exist at all
+    sed -i '/^\s*listen\s*443\s*ssl;\s*$/a \  listen [::]:443 ssl;' "$f"
+    updated=1
+  fi
+  
+  return $updated
 }
 
 # List all site config files in /etc/nginx/sites-available
@@ -128,19 +155,19 @@ configure_nginx_ipv6() {
   info "Configuring Nginx to listen on IPv6..."
 
   # Update Lempzy vhost templates for future sites
-  local templates=(
-    "/root/Lempzy/scripts/vhost-nocache"
-    "/root/Lempzy/scripts/vhost-fastcgi"
-    "/root/Lempzy/scripts/vhost-nocache-invoiceninja"
-  )
-  for t in "${templates[@]}"; do
-    if [[ -f "$t" ]]; then
-      ensure_ipv6_listen_in_file "$t"
-      ok "Updated template: $t"
-    else
-      warn "Template not found: $t"
-    fi
-  done
+  # local templates=(
+  #   "/root/Lempzy/scripts/vhost-nocache"
+  #   "/root/Lempzy/scripts/vhost-fastcgi"
+  #   "/root/Lempzy/scripts/vhost-nocache-invoiceninja"
+  # )
+  # for t in "${templates[@]}"; do
+  #   if [[ -f "$t" ]]; then
+  #     ensure_ipv6_listen_in_file "$t"
+  #     ok "Updated template: $t"
+  #   else
+  #     warn "Template not found: $t"
+  #   fi
+  # done
 
   # Check all sites in sites-available and configure those without IPv6
   local sites_list

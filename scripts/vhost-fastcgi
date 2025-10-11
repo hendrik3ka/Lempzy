@@ -2,11 +2,12 @@ fastcgi_cache_path /etc/nginx/mycache/domain.com levels=1:2 keys_zone=domain.com
 
 server {
   listen 80;
-  listen [::]:80;
+  # listen [::]:80;
   listen 443 ssl;
-  listen [::]:443 ssl;
+  # listen [::]:443 ssl;
   ssl_certificate /etc/ssl/domain.com/domain.com.crt;
   ssl_certificate_key /etc/ssl/domain.com/domain.com.key;
+  # as of NGINX version 1.25.1, you should use the http2 on; directive inside the server block
   http2 on;
   root /var/www/domain.com;
   index index.php index.html index.htm;

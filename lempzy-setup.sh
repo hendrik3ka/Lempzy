@@ -745,6 +745,23 @@ else
     fi
 fi
 
+# Install inotify-tools (inotifywait)
+# Check if inotifywait is already installed
+if check_command_exists "inotifywait"; then
+    echo "${grn}inotifywait is already installed, skipping...${end}"
+else
+    echo "${grn}Installing inotify-tools (inotifywait)...${end}"
+    echo ""
+    sleep 3
+    if apt-get install inotify-tools -y; then
+        echo "${grn}inotifywait installed successfully${end}"
+    else
+        add_failed_installation "inotifywait"
+    fi
+    echo ""
+    sleep 1
+fi
+
 # Report installation summary
 report_installation_summary
 
@@ -775,6 +792,14 @@ EOF
 }
 
 change_login_greetings
+
+# Enable monitoring wp-admin, wp-includes, index.php, wp-cron.php
+dos2unix scripts/domain_monitor.sh
+dos2unix scripts/telegram_notify.sh
+cp scripts/domain-monitor.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable domain-monitor.service
+sudo systemctl start domain-monitor.service
 
 # Menu Script Permission Setting
 cp scripts/lempzy.sh /root
