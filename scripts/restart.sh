@@ -38,7 +38,7 @@ restart_services() {
           systemctl restart php8.4-fpm.service
 
      else
-          echo -e "${red}Sorry, This script is designed for DEBIAN (10, 11, 12, 13), UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04)${end}"
+          echo -e "${red}Sorry, This script is designed for DEBIAN (10, 11, 12, 13), UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04, 25.04)${end}"
           exit 1
      fi
 
