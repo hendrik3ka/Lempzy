@@ -132,7 +132,11 @@ main_menu() {
 
       8)
         clear
-        systemctl restart php$PHP_VERSION-fpm.service
+        if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+        else
+          systemctl restart php-fpm.service
+        fi
         systemctl restart nginx
         echo "${cyn}Server Refreshed!${end}"
         read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
