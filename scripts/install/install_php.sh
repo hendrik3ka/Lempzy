@@ -112,7 +112,7 @@ install_php() {
          rm -f /usr/bin/lsphp* /usr/local/bin/lsphp* >/dev/null 2>&1 || true
          apt-mark hold 'php*-litespeed' >/dev/null 2>&1 || true
          apt install php8.4-fpm php-mysql -y --no-install-recommends
-         apt-get install php8.4 php8.4-common php8.4-gd php8.4-mysql php8.4-imap php8.4-cli php8.4-cgi php-pear mcrypt imagemagick libruby php8.4-curl php8.4-intl php8.4-pspell php8.4-sqlite3 php8.4-tidy php8.4-xmlrpc php8.4-xsl memcached php-memcache php-imagick php8.4-zip php8.4-mbstring memcached php8.4-soap php8.4-fpm php8.4-opcache php-apcu -y --no-install-recommends
+         apt-get install php8.4-common php8.4-gd php8.4-mysql php8.4-imap php8.4-cli php8.4-cgi php-pear mcrypt imagemagick libruby php8.4-curl php8.4-intl php8.4-pspell php8.4-sqlite3 php8.4-tidy php8.4-xmlrpc php8.4-xsl memcached php-memcache php-imagick php8.4-zip php8.4-mbstring memcached php8.4-soap php8.4-fpm php8.4-opcache php-apcu -y --no-install-recommends
           echo ""
           sleep 1
 
@@ -314,7 +314,7 @@ install_specific_php_version() {
                              rm -f /usr/bin/lsphp* /usr/local/bin/lsphp* >/dev/null 2>&1 || true
                              apt-mark hold 'php*-litespeed' >/dev/null 2>&1 || true
                              apt install php$PHP_VER-fpm php-mysql -y --no-install-recommends
-                             apt-get install php$PHP_VER php$PHP_VER-common php$PHP_VER-gd php$PHP_VER-mysql php$PHP_VER-imap php$PHP_VER-cli php$PHP_VER-cgi php-pear imagemagick libruby php$PHP_VER-curl php$PHP_VER-intl php$PHP_VER-pspell php$PHP_VER-sqlite3 php$PHP_VER-tidy php$PHP_VER-xsl memcached php-memcache php-imagick php$PHP_VER-zip php$PHP_VER-mbstring php$PHP_VER-soap php$PHP_VER-fpm php$PHP_VER-opcache php-apcu -y --no-install-recommends 2>/dev/null || true
+                             apt-get install php$PHP_VER-common php$PHP_VER-gd php$PHP_VER-mysql php$PHP_VER-imap php$PHP_VER-cli php$PHP_VER-cgi php-pear imagemagick libruby php$PHP_VER-curl php$PHP_VER-intl php$PHP_VER-pspell php$PHP_VER-sqlite3 php$PHP_VER-tidy php$PHP_VER-xsl memcached php-memcache php-imagick php$PHP_VER-zip php$PHP_VER-mbstring php$PHP_VER-soap php$PHP_VER-fpm php$PHP_VER-opcache php-apcu -y --no-install-recommends 2>/dev/null || true
                          else
                               echo "${red}No suitable PHP version found. Please install PHP manually.${end}"
                               return 1
