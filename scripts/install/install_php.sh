@@ -324,8 +324,11 @@ install_specific_php_version() {
                          return 1
                     fi
                else
-                    # PHP 8.3 installation succeeded, install extensions
-                   apt-get install php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y --no-install-recommends 2>/dev/null || true
+                    if [[ "$OS_ID" == "debian" ]] && [[ "$OS_CODENAME" == "trixie" ]]; then
+                         apt-get install php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php8.3-memcache php8.3-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php8.3-apcu php8.3-xml -y --no-install-recommends 2>/dev/null || true
+                    else
+                         apt-get install php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y --no-install-recommends 2>/dev/null || true
+                    fi
                fi
                ;;
           *)
