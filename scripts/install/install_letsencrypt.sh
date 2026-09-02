@@ -23,7 +23,7 @@ install_letsencrypt() {
     # Try to install certbot via snap (recommended method)
     echo "${yel}Attempting to install certbot via snap...${end}"
     
-    if apt install snapd -y && snap install core && snap refresh core && snap install --classic certbot; then
+    if DEBIAN_FRONTEND=noninteractive apt-get install -y snapd -y && snap install core && snap refresh core && snap install --classic certbot; then
         echo "${grn}Certbot installed successfully via snap${end}"
         
         # Create symbolic link for certbot command

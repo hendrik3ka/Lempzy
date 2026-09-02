@@ -85,8 +85,13 @@ fi
 install_invoice_ninja() {
      rm -rf /var/www/$domain/*
      cd /var/www/$domain/
-     wget https://github.com/invoiceninja/invoiceninja/releases/download/v5.5.35/invoiceninja.zip
-     unzip invoiceninja.zip
+     wget -q https://github.com/invoiceninja/invoiceninja/releases/download/v5.5.35/invoiceninja.zip
+     if ! unzip -t invoiceninja.zip >/dev/null 2>&1; then
+          echo "InvoiceNinja download failed or archive corrupt" >&2
+          exit 1
+     fi
+     unzip -o -q invoiceninja.zip
+     rm -f invoiceninja.zip
      chown -R www-data:www-data /var/www/$domain
      chown -R www-data:www-data /var/www/$domain
      sudo chmod -R g+s /var/www/$domain

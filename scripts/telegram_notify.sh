@@ -1,11 +1,21 @@
 #!/bin/bash
 
-# Your Telegram bot token and chat ID
-TOKEN="6380344944:AAHpptO_U1hzwiS6sSzgTu8pUG07KmfAg1M"
-CHAT_ID="366284934"  # Replace with your real chat ID
+# Telegram bot token and chat ID are read from environment variables.
+# SECURITY: never hardcode credentials in scripts (they end up in git history).
+# Set them before use, e.g. in /root/.bashrc or a systemd EnvironmentFile:
+#   export TELEGRAM_BOT_TOKEN="123456:ABC-your-token"
+#   export TELEGRAM_CHAT_ID="123456789"
+# The previously committed token MUST be revoked via @BotFather (/revoke).
+TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
 # Function to send a message
 send_telegram_notification() {
+  # Fail fast if credentials are not configured
+  if [ -z "$TOKEN" ] || [ -z "$CHAT_ID" ]; then
+    echo "Error: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set; notification skipped" >&2
+    return 1
+  fi
   MESSAGE_TEXT=$(echo "$1" | sed 's/\"/\\\"/g') # Escape quotes
   curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
     -d chat_id="$CHAT_ID" \

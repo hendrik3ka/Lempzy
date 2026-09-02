@@ -23,8 +23,8 @@ install_php() {
      OS_VERSION=$(lsb_release -rs)
      if [[ "${OS_VERSION}" == "10" ]]; then
           echo "${grn}Installing PHP ...${end}"
-          apt install php7.3-fpm php-mysql -y
-          apt install php7.3-common php7.3-zip php7.3-curl php7.3-xml php7.3-xmlrpc php7.3-json php7.3-mysql php7.3-pdo php7.3-gd php7.3-imagick php7.3-ldap php7.3-imap php7.3-mbstring php7.3-intl php7.3-cli php7.3-recode php7.3-tidy php7.3-bcmath php7.3-opcache -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.3-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.3-common php7.3-zip php7.3-curl php7.3-xml php7.3-xmlrpc php7.3-json php7.3-mysql php7.3-pdo php7.3-gd php7.3-imagick php7.3-ldap php7.3-imap php7.3-mbstring php7.3-intl php7.3-cli php7.3-recode php7.3-tidy php7.3-bcmath php7.3-opcache -y
           echo ""
           sleep 1
 
@@ -32,18 +32,18 @@ install_php() {
           echo "${grn}Installing PHP ...${end}"
           echo ""
           sleep 3
-          apt install php7.4-fpm php-mysql -y
-          apt-get install php7.4 php7.4-common php7.4-gd php7.4-mysql php7.4-imap php7.4-cli php7.4-cgi php-pear mcrypt imagemagick libruby php7.4-curl php7.4-intl php7.4-pspell php7.4-sqlite3 php7.4-tidy php7.4-xmlrpc php7.4-xsl memcached php-memcache php-imagick php7.4-zip php7.4-mbstring memcached php7.4-soap php7.4-fpm php7.4-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.4-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.4 php7.4-common php7.4-gd php7.4-mysql php7.4-imap php7.4-cli php7.4-cgi php-pear mcrypt imagemagick libruby php7.4-curl php7.4-intl php7.4-pspell php7.4-sqlite3 php7.4-tidy php7.4-xmlrpc php7.4-xsl memcached php-memcache php-imagick php7.4-zip php7.4-mbstring memcached php7.4-soap php7.4-fpm php7.4-opcache php-apcu -y
           echo ""
           sleep 1
 
      elif [[ "${OS_VERSION}" == "18.04" ]]; then
           echo "${grn}Installing PHP ...${end}"
-          apt-get install software-properties-common
+          DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common
           add-apt-repository -y ppa:ondrej/php
           apt update
-          apt install php7.3-fpm php-mysql -y
-          apt install php7.3-common php7.3-zip php7.3-curl php7.3-xml php7.3-xmlrpc php7.3-json php7.3-mysql php7.3-pdo php7.3-gd php7.3-imagick php7.3-ldap php7.3-imap php7.3-mbstring php7.3-intl php7.3-cli php7.3-recode php7.3-tidy php7.3-bcmath php7.3-opcache -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.3-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.3-common php7.3-zip php7.3-curl php7.3-xml php7.3-xmlrpc php7.3-json php7.3-mysql php7.3-pdo php7.3-gd php7.3-imagick php7.3-ldap php7.3-imap php7.3-mbstring php7.3-intl php7.3-cli php7.3-recode php7.3-tidy php7.3-bcmath php7.3-opcache -y
           apt-get purge php8.* -y
           apt-get autoclean
           apt-get autoremove -y
@@ -54,8 +54,8 @@ install_php() {
           echo "${grn}Installing PHP ...${end}"
           echo ""
           sleep 3
-          apt install php7.4-fpm php-mysql -y
-          apt-get install php7.4 php7.4-common php7.4-gd php7.4-mysql php7.4-imap php7.4-cli php7.4-cgi php-pear mcrypt imagemagick libruby php7.4-curl php7.4-intl php7.4-pspell php7.4-sqlite3 php7.4-tidy php7.4-xmlrpc php7.4-xsl memcached php-memcache php-imagick php7.4-zip php7.4-mbstring memcached php7.4-soap php7.4-fpm php7.4-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.4-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php7.4 php7.4-common php7.4-gd php7.4-mysql php7.4-imap php7.4-cli php7.4-cgi php-pear mcrypt imagemagick libruby php7.4-curl php7.4-intl php7.4-pspell php7.4-sqlite3 php7.4-tidy php7.4-xmlrpc php7.4-xsl memcached php-memcache php-imagick php7.4-zip php7.4-mbstring memcached php7.4-soap php7.4-fpm php7.4-opcache php-apcu -y
           echo ""
           sleep 1
 
@@ -63,8 +63,8 @@ install_php() {
           echo "${grn}Installing PHP ...${end}"
           echo ""
           sleep 3
-          apt install php8.1-fpm php-mysql -y
-          apt-get install php8.1 php8.1-common php8.1-gd php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi php-pear mcrypt imagemagick libruby php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3 php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache php-imagick php8.1-zip php8.1-mbstring memcached php8.1-soap php8.1-fpm php8.1-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.1-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.1 php8.1-common php8.1-gd php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi php-pear mcrypt imagemagick libruby php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3 php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache php-imagick php8.1-zip php8.1-mbstring memcached php8.1-soap php8.1-fpm php8.1-opcache php-apcu -y
           echo ""
           sleep 1
 
@@ -72,8 +72,8 @@ install_php() {
           echo "${grn}Installing PHP ...${end}"
           echo ""
           sleep 3
-          apt install php8.1-fpm php-mysql -y
-          apt-get install php8.1 php8.1-common php8.1-gd php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi php-pear mcrypt imagemagick libruby php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3 php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache php-imagick php8.1-zip php8.1-mbstring memcached php8.1-soap php8.1-fpm php8.1-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.1-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.1 php8.1-common php8.1-gd php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi php-pear mcrypt imagemagick libruby php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3 php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache php-imagick php8.1-zip php8.1-mbstring memcached php8.1-soap php8.1-fpm php8.1-opcache php-apcu -y
           echo ""
           sleep 1
 
@@ -81,8 +81,8 @@ install_php() {
           echo "${grn}Installing PHP 8.3...${end}"
           echo ""
           sleep 3
-          apt install php8.3-fpm php-mysql -y
-          apt-get install php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y
           echo ""
           sleep 1
 
@@ -90,8 +90,8 @@ install_php() {
           echo "${grn}Installing PHP 8.3...${end}"
           echo ""
           sleep 3
-          apt install php8.3-fpm php-mysql -y
-          apt-get install php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y
           echo ""
           sleep 1
           
@@ -99,8 +99,8 @@ install_php() {
           echo "${grn}Installing PHP 8.2...${end}"
           echo ""
           sleep 3
-          apt install php8.2-fpm php-mysql -y
-          apt-get install php8.2 php8.2-common php8.2-gd php8.2-mysql php8.2-imap php8.2-cli php8.2-cgi php-pear mcrypt imagemagick libruby php8.2-curl php8.2-intl php8.2-pspell php8.2-sqlite3 php8.2-tidy php8.2-xmlrpc php8.2-xsl memcached php-memcache php-imagick php8.2-zip php8.2-mbstring memcached php8.2-soap php8.2-fpm php8.2-opcache php-apcu -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.2-fpm php-mysql -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -y php8.2 php8.2-common php8.2-gd php8.2-mysql php8.2-imap php8.2-cli php8.2-cgi php-pear mcrypt imagemagick libruby php8.2-curl php8.2-intl php8.2-pspell php8.2-sqlite3 php8.2-tidy php8.2-xmlrpc php8.2-xsl memcached php-memcache php-imagick php8.2-zip php8.2-mbstring memcached php8.2-soap php8.2-fpm php8.2-opcache php-apcu -y
           echo ""
           sleep 1
 
@@ -111,8 +111,8 @@ install_php() {
          apt-get purge -y php8.4-litespeed 'php*-litespeed' 'lsphp*' >/dev/null 2>&1 || true
          rm -f /usr/bin/lsphp* /usr/local/bin/lsphp* >/dev/null 2>&1 || true
          apt-mark hold 'php*-litespeed' >/dev/null 2>&1 || true
-         apt install php8.4-fpm php8.4-mysql -y --no-install-recommends
-         apt-get install php8.4-common php8.4-gd php8.4-mysql php8.4-imap php8.4-cli php8.4-cgi mcrypt imagemagick libruby php8.4-curl php8.4-intl php8.4-pspell php8.4-sqlite3 php8.4-tidy php8.4-xmlrpc php8.4-xsl memcached php8.4-memcache php8.4-imagick php8.4-zip php8.4-mbstring memcached php8.4-soap php8.4-fpm php8.4-opcache php8.4-apcu php8.4-xml -y --no-install-recommends
+         DEBIAN_FRONTEND=noninteractive apt-get install -y php8.4-fpm php8.4-mysql -y --no-install-recommends
+         DEBIAN_FRONTEND=noninteractive apt-get install -y php8.4-common php8.4-gd php8.4-mysql php8.4-imap php8.4-cli php8.4-cgi mcrypt imagemagick libruby php8.4-curl php8.4-intl php8.4-pspell php8.4-sqlite3 php8.4-tidy php8.4-xmlrpc php8.4-xsl memcached php8.4-memcache php8.4-imagick php8.4-zip php8.4-mbstring memcached php8.4-soap php8.4-fpm php8.4-opcache php8.4-apcu php8.4-xml -y --no-install-recommends
           echo ""
           sleep 1
 
@@ -277,24 +277,24 @@ install_specific_php_version() {
      # Install the specific PHP version
      case $php_version in
           "7.4")
-               apt install php7.4-fpm php-mysql -y
-               apt-get install php7.4 php7.4-common php7.4-gd php7.4-mysql php7.4-imap php7.4-cli php7.4-cgi php-pear mcrypt imagemagick libruby php7.4-curl php7.4-intl php7.4-pspell php7.4-sqlite3 php7.4-tidy php7.4-xmlrpc php7.4-xsl memcached php-memcache php-imagick php7.4-zip php7.4-mbstring memcached php7.4-soap php7.4-fpm php7.4-opcache php-apcu -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php7.4-fpm php-mysql -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php7.4 php7.4-common php7.4-gd php7.4-mysql php7.4-imap php7.4-cli php7.4-cgi php-pear mcrypt imagemagick libruby php7.4-curl php7.4-intl php7.4-pspell php7.4-sqlite3 php7.4-tidy php7.4-xmlrpc php7.4-xsl memcached php-memcache php-imagick php7.4-zip php7.4-mbstring memcached php7.4-soap php7.4-fpm php7.4-opcache php-apcu -y
                ;;
           "8.0")
-               apt install php8.0-fpm php-mysql -y
-               apt-get install php8.0 php8.0-common php8.0-gd php8.0-mysql php8.0-imap php8.0-cli php8.0-cgi php-pear mcrypt imagemagick libruby php8.0-curl php8.0-intl php8.0-pspell php8.0-sqlite3 php8.0-tidy php8.0-xmlrpc php8.0-xsl memcached php-memcache php-imagick php8.0-zip php8.0-mbstring memcached php8.0-soap php8.0-fpm php8.0-opcache php-apcu -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php8.0-fpm php-mysql -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php8.0 php8.0-common php8.0-gd php8.0-mysql php8.0-imap php8.0-cli php8.0-cgi php-pear mcrypt imagemagick libruby php8.0-curl php8.0-intl php8.0-pspell php8.0-sqlite3 php8.0-tidy php8.0-xmlrpc php8.0-xsl memcached php-memcache php-imagick php8.0-zip php8.0-mbstring memcached php8.0-soap php8.0-fpm php8.0-opcache php-apcu -y
                ;;
           "8.1")
-               apt install php8.1-fpm php-mysql -y
-               apt-get install php8.1 php8.1-common php8.1-gd php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi php-pear mcrypt imagemagick libruby php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3 php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache php-imagick php8.1-zip php8.1-mbstring memcached php8.1-soap php8.1-fpm php8.1-opcache php-apcu -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php8.1-fpm php-mysql -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php8.1 php8.1-common php8.1-gd php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi php-pear mcrypt imagemagick libruby php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3 php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache php-imagick php8.1-zip php8.1-mbstring memcached php8.1-soap php8.1-fpm php8.1-opcache php-apcu -y
                ;;
           "8.2")
-               apt install php8.2-fpm php-mysql -y
-               apt-get install php8.2 php8.2-common php8.2-gd php8.2-mysql php8.2-imap php8.2-cli php8.2-cgi php-pear mcrypt imagemagick libruby php8.2-curl php8.2-intl php8.2-pspell php8.2-sqlite3 php8.2-tidy php8.2-xmlrpc php8.2-xsl memcached php-memcache php-imagick php8.2-zip php8.2-mbstring memcached php8.2-soap php8.2-fpm php8.2-opcache php-apcu -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php8.2-fpm php-mysql -y
+               DEBIAN_FRONTEND=noninteractive apt-get install -y php8.2 php8.2-common php8.2-gd php8.2-mysql php8.2-imap php8.2-cli php8.2-cgi php-pear mcrypt imagemagick libruby php8.2-curl php8.2-intl php8.2-pspell php8.2-sqlite3 php8.2-tidy php8.2-xmlrpc php8.2-xsl memcached php-memcache php-imagick php8.2-zip php8.2-mbstring memcached php8.2-soap php8.2-fpm php8.2-opcache php-apcu -y
                ;;
           "8.3")
                # Try to install PHP 8.3, with fallback for Debian 13
-               if ! apt install php8.3-fpm php8.3-mysql -y --no-install-recommends 2>/dev/null; then
+               if ! DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3-fpm php8.3-mysql -y --no-install-recommends 2>/dev/null; then
                     echo "${yel}PHP 8.3 not available from repository. Checking alternatives...${end}"
                     
                     # For Debian 13, check if default PHP is available
@@ -313,8 +313,8 @@ install_specific_php_version() {
                              apt-get purge -y php8.4-litespeed 'php*-litespeed' 'lsphp*' >/dev/null 2>&1 || true
                              rm -f /usr/bin/lsphp* /usr/local/bin/lsphp* >/dev/null 2>&1 || true
                              apt-mark hold 'php*-litespeed' >/dev/null 2>&1 || true
-                             apt install php$PHP_VER-fpm php$PHP_VER-mysql -y --no-install-recommends
-                             apt-get install php$PHP_VER-common php$PHP_VER-gd php$PHP_VER-mysql php$PHP_VER-imap php$PHP_VER-cli php$PHP_VER-cgi imagemagick libruby php$PHP_VER-curl php$PHP_VER-intl php$PHP_VER-pspell php$PHP_VER-sqlite3 php$PHP_VER-tidy php$PHP_VER-xsl memcached php$PHP_VER-memcache php$PHP_VER-imagick php$PHP_VER-zip php$PHP_VER-mbstring php$PHP_VER-soap php$PHP_VER-fpm php$PHP_VER-opcache php$PHP_VER-apcu php$PHP_VER-xml -y --no-install-recommends 2>/dev/null || true
+                             DEBIAN_FRONTEND=noninteractive apt-get install -y php$PHP_VER-fpm php$PHP_VER-mysql -y --no-install-recommends
+                             DEBIAN_FRONTEND=noninteractive apt-get install -y php$PHP_VER-common php$PHP_VER-gd php$PHP_VER-mysql php$PHP_VER-imap php$PHP_VER-cli php$PHP_VER-cgi imagemagick libruby php$PHP_VER-curl php$PHP_VER-intl php$PHP_VER-pspell php$PHP_VER-sqlite3 php$PHP_VER-tidy php$PHP_VER-xsl memcached php$PHP_VER-memcache php$PHP_VER-imagick php$PHP_VER-zip php$PHP_VER-mbstring php$PHP_VER-soap php$PHP_VER-fpm php$PHP_VER-opcache php$PHP_VER-apcu php$PHP_VER-xml -y --no-install-recommends 2>/dev/null || true
                          else
                               echo "${red}No suitable PHP version found. Please install PHP manually.${end}"
                               return 1
@@ -325,9 +325,9 @@ install_specific_php_version() {
                     fi
                else
                     if [[ "$OS_ID" == "debian" ]] && [[ "$OS_CODENAME" == "trixie" ]]; then
-                         apt-get install php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php8.3-memcache php8.3-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php8.3-apcu php8.3-xml -y --no-install-recommends 2>/dev/null || true
+                         DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php8.3-memcache php8.3-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php8.3-apcu php8.3-xml -y --no-install-recommends 2>/dev/null || true
                     else
-                         apt-get install php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y --no-install-recommends 2>/dev/null || true
+                         DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3 php8.3-common php8.3-gd php8.3-mysql php8.3-imap php8.3-cli php8.3-cgi php-pear mcrypt imagemagick libruby php8.3-curl php8.3-intl php8.3-pspell php8.3-sqlite3 php8.3-tidy php8.3-xmlrpc php8.3-xsl memcached php-memcache php-imagick php8.3-zip php8.3-mbstring memcached php8.3-soap php8.3-fpm php8.3-opcache php-apcu -y --no-install-recommends 2>/dev/null || true
                     fi
                fi
                ;;

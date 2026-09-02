@@ -16,7 +16,7 @@ install_netstat() {
      echo "${grn}Installing netstat ...${end}"
      echo ""
      sleep 3
-     apt install net-tools -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y net-tools -y
      netstat -ptuln
      echo ""
      sleep 1

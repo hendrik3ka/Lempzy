@@ -16,8 +16,8 @@ install_ffmpeg() {
      echo "${grn}Installing FFMPEG AND IMAGEMAGICK...${end}"
      echo ""
      sleep 3
-     apt-get install imagemagick -y
-     apt-get install ffmpeg -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y imagemagick -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y ffmpeg -y
      echo ""
      sleep 1
 }

@@ -16,8 +16,8 @@ install_git() {
      echo "${grn}Installing Git And Curl ...${end}"
      echo ""
      sleep 3
-     apt-get install git -y
-     apt-get install curl -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y git -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y curl -y
      echo ""
      sleep 1
 }

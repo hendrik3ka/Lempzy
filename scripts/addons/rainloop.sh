@@ -86,9 +86,14 @@ check_if_domain_exist() {
 install_rainloop() {
     rm -rf /var/www/$domain/*
     cd /var/www/$domain
-    wget http://www.rainloop.net/repository/webmail/rainloop-latest.zip
-    unzip rainloop-latest.zip
-    rm rainloop-latest.zip
+    # HTTPS (was plain HTTP — MITM risk) + zip integrity verification
+    wget -q https://www.rainloop.net/repository/webmail/rainloop-latest.zip
+    if ! unzip -t rainloop-latest.zip >/dev/null 2>&1; then
+        echo "RainLoop download failed or archive corrupt" >&2
+        exit 1
+    fi
+    unzip -o -q rainloop-latest.zip
+    rm -f rainloop-latest.zip
     systemctl restart nginx
     chown -R www-data:www-data /var/www/$domain
 }

@@ -21,7 +21,7 @@ install_redis() {
     apt update
     
     # Install Redis server
-    apt install redis-server -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y redis-server -y
     
     # Configure Redis
     echo "${grn}Configuring Redis...${end}"
