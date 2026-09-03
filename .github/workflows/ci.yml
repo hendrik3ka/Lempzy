@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash -n syntax check (all shell scripts)
+        run: |
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! bash -n "$f"; then
+              echo "::error file=$f::syntax check failed"
+              fail=1
+            fi
+          done < <(find . -name '*.sh' -not -path './.git/*' -print0)
+          exit $fail
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: error
+          ignore_paths: .git
+        continue-on-error: true
+
+      - name: Security grep — no pipe-to-shell, no http:// downloads, no hardcoded bot tokens
+        run: |
+          fail=0
+          if grep -rnE 'bash <\(curl|sh <\(curl|curl[^|]*\|\s*bash|wget[^|]*\|\s*sh' --include='*.sh' . ; then
+            echo "::error::pipe-to-shell pattern found"; fail=1
+          fi
+          if grep -rnE 'wget http://|curl http://' --include='*.sh' . | grep -v 'localhost\|127\.0\.0\.1'; then
+            echo "::error::plain-HTTP download found"; fail=1
+          fi
+          # Telegram bot token pattern: 9-10 digits : 35-char alnum
+          if grep -rnE '[0-9]{9,10}:[A-Za-z0-9_-]{35}' --include='*.sh' . ; then
+            echo "::error::hardcoded Telegram bot token found"; fail=1
+          fi
+          exit $fail
