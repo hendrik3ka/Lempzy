@@ -3,13 +3,9 @@
 # Enable debug output
 set -x
 
-# Include the Telegram notification function script
-DIR="$(cd "$(dirname "${BASH_SOURCE}")" >/dev/null 2>&1 && pwd)"
-TELEGRAM_NOTIFY_SCRIPT="$DIR/telegram_notify.sh"
-if ! source "$TELEGRAM_NOTIFY_SCRIPT"; then
-    echo "Error: Failed to source $TELEGRAM_NOTIFY_SCRIPT" >&2
-    exit 1
-fi
+# NOTE: Telegram notification support was removed entirely (security decision:
+# the upstream version shipped a hardcoded bot token in git history).
+# Alerts are now written to the systemd journal / stdout only.
 
 # Parent directory for domains
 WWW_DIR="/var/www"
@@ -64,12 +60,12 @@ start_watch() {
             if [[ "$event" =~ ISDIR && ( "$path" =~ wp-admin/ || "$path" =~ wp-includes/ ) ]]; then
                 MESSAGE="*ALERT*: New directory detected in '$path$file'. Event: '$event'"
                 echo "Sending notification for new directory in $path$file"
-                send_telegram_notification "$MESSAGE"
+                echo "$MESSAGE"
             elif [[ ! "$event" =~ ISDIR ]]; then
                 # Notify for file changes
                 MESSAGE="*ALERT*: Change detected in '$path$file'. Event: '$event'"
                 echo "Sending notification for change in $path$file"
-                send_telegram_notification "$MESSAGE"
+                echo "$MESSAGE"
             fi
             
             # Remove lock file after 1 second to allow new events

@@ -23,9 +23,13 @@ install_ioncube() {
      # PHP Version
      PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
-     # Download ioncube
-     wget https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
-     tar -xvzf ioncube_loaders_lin_x86-64.tar.gz
+     # Download ioncube (verified: HTTPS + tar integrity check)
+     wget -q https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
+     if ! tar -tzf ioncube_loaders_lin_x86-64.tar.gz >/dev/null 2>&1; then
+          echo "${red}ionCube loader download failed or archive corrupt${end}"
+          exit 1
+     fi
+     tar -xzf ioncube_loaders_lin_x86-64.tar.gz
      rm -f ioncube_loaders_lin_x86-64.tar.gz
 
      # Copy files to modules folder

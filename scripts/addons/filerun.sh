@@ -87,8 +87,14 @@ check_if_domain_exist() {
 install_filerun() {
     rm -rf /var/www/$domain/*
     cd /var/www/$domain/
-    wget -O FileRun.zip http://www.filerun.com/download-latest
-    unzip FileRun.zip
+    # HTTPS (was plain HTTP — MITM risk) + zip integrity verification
+    wget -O FileRun.zip https://www.filerun.com/download-latest
+    if ! unzip -t FileRun.zip >/dev/null 2>&1; then
+        echo "FileRun download failed or archive corrupt" >&2
+        exit 1
+    fi
+    unzip -o FileRun.zip
+    rm -f FileRun.zip
     chown -R www-data:www-data /var/www/$domain
     chown -R www-data:www-data /var/www/$domain/system/data
     chown www-data:www-data /var/www/

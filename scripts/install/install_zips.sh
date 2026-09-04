@@ -16,8 +16,8 @@ install_zips() {
      echo "${grn}Installing ZIP AND UNZIP ...${end}"
      echo ""
      sleep 3
-     apt-get install unzip
-     apt-get install zip
+     DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
+     DEBIAN_FRONTEND=noninteractive apt-get install -y zip
      echo ""
      sleep 1
 }

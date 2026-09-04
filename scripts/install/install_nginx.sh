@@ -16,7 +16,7 @@ install_nginx() {
      echo "${grn}Installing NGINX ...${end}"
      echo ""
      sleep 3
-     apt-get install nginx -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y nginx -y
      sudo ufw allow 'Nginx HTTP'
      systemctl start nginx
      echo ""

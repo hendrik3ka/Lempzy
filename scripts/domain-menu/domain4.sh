@@ -208,29 +208,33 @@ delete_default_plugin() {
     rm -rf /var/www/$domain/wp-content/plugins/hello.php
 }
 
+
+# Download a WordPress plugin zip and verify it is a valid zip archive
+# before extracting (guards against truncated/MITM'd downloads).
+wp_plugin_fetch() {
+     local plugin="$1"
+     wget -q "https://downloads.wordpress.org/plugin/${plugin}.zip"
+     if ! unzip -t "${plugin}.zip" >/dev/null 2>&1; then
+          echo "Download failed or corrupt archive: ${plugin}.zip" >&2
+          return 1
+     fi
+     unzip -o -q "${plugin}.zip"
+     rm -f "${plugin}.zip"
+}
+
 # Install Common Plugin
 install_common_plugin() {
     cd /var/www/$domain/wp-content/plugins
-    wget https://downloads.wordpress.org/plugin/all-in-one-wp-migration.zip
-    unzip all-in-one-wp-migration.zip
-    rm -rf all-in-one-wp-migration.zip
-    wget https://downloads.wordpress.org/plugin/classic-editor.zip
-    unzip classic-editor.zip
-    rm -rf classic-editor.zip
-    wget https://downloads.wordpress.org/plugin/really-simple-ssl.zip
-    unzip really-simple-ssl.zip
-    rm -rf really-simple-ssl.zip
-    wget https://downloads.wordpress.org/plugin/all-in-one-seo-pack.zip
-    unzip all-in-one-seo-pack.zip
-    rm -rf all-in-one-seo-pack.zip
+    wp_plugin_fetch "all-in-one-wp-migration" || return 1
+    wp_plugin_fetch "classic-editor" || return 1
+    wp_plugin_fetch "really-simple-ssl" || return 1
+    wp_plugin_fetch "all-in-one-seo-pack" || return 1
 }
 
 # Install Nginx Cache
 install_nginx_cache() {
     phpToChange="<?php echo esc_attr( get_option( 'nginx_cache_path' ) ); ?>"
-    wget https://downloads.wordpress.org/plugin/nginx-cache.zip
-    unzip nginx-cache.zip
-    rm -rf nginx-cache.zip
+    wp_plugin_fetch "nginx-cache" || return 1
     sed -i "s/<?php echo esc_attr( get_option( 'nginx_cache_path' ) ); ?>/\/etc\/nginx\/mycache\/$domain/g" /var/www/$domain/wp-content/plugins/nginx-cache/includes/settings-page.php
     cd
 

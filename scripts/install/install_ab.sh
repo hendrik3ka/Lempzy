@@ -16,7 +16,7 @@ install_ab() {
      echo "${grn}Installing AB BENCHMARKING TOOL ...${end}"
      echo ""
      sleep 3
-     apt-get install apache2-utils -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y apache2-utils -y
      echo ""
      sleep 1
 }

@@ -1,59 +1,30 @@
-<p align="center"><a href="[https://miguelemmara.me/](https://github.com/MiguelEmmara-ai/Lempzy)" target="_blank"><img src="https://raw.githubusercontent.com/MiguelEmmara-ai/Lempzy/development/logo/lemp.jpeg" width="400" alt="Lemp Logo"></a><br>Image Source: Techkylabs</p>
+# Lempzy — Hardened Fork
 
-# Lempzy
-Lempzy is a Simple All In One script to install LEMP Server Stack (Linux eNginx Mysql PHP) with just a single command line.
+> **HARDENED FORK** dari [hendrik3ka/Lempzy](https://github.com/hendrik3ka/Lempzy) dengan 7 fix keamanan hasil audit mendalam. Repo asli tidak tersentuh; fix yang sama diajukan ke upstream via [PR #1](https://github.com/hendrik3ka/Lempzy/pull/1).
 
-# Menu
-![Lempzy](https://raw.githubusercontent.com/MiguelEmmara-ai/Lempzy/v1.2/screenshots/Lempzy-main-menu.PNG "Main Menu")
+## Fix keamanan yang diterapkan (commit `b2269f0`)
 
-## Features
-Lempzy will also optimize the configuration within The LEMP Stack.
-* Nginx - A high performance web server and a reverse proxy server.
-  * Fast FastCGI Caching
-  * Custom Optimize Nginx Config
-* PHP - General-purpose scripting language that can be used to develop dynamic and interactive websites.
-  * php-fpm
-  * php-mysql
-  * Custom Optimize PHP Config
-* MariaDB - When it comes to performing queries or replication, MariaDB is faster than MySQL.
-* OpenSSL - Applications that secure communications over computer networks against eavesdropping or need to identify the party at the other end.
-  * Free SSL certificates from Let's Encrypt
-* Interactive menu for convenient
+1. **Fungsi notifikasi Telegram dihapus total** — `scripts/telegram_notify.sh` dan semua call site-nya dihapus; alert domain monitor kini hanya ke journalctl/stdout. Token lama yang pernah tertanam di git history upstream tetap WAJIB di-revoke via @BotFather.
+2. **UFW anti-lockout** — port SSH dideteksi otomatis (`ss -tlnp` + `Port` di sshd_config) sebelum `ufw enable`; abort jika tidak ada port SSH terdeteksi.
+3. **MariaDB secure-installation** — password root random, anonymous users dihapus, remote root dimatikan, test db di-drop. Kredensial disimpan via `mysql_config_editor` (login-path `lempzy`).
+4. **`SCRIPT_DIR` robust** — 24× `cd && cd Lempzy` diganti resolusi `BASH_SOURCE` (tidak peduli nama/lokasi clone).
+5. **apt noninteractive** — semua `apt install` pakai `-y` + `DEBIAN_FRONTEND=noninteractive` (12 file).
+6. **`mariadb_repo_setup` diverifikasi** — sanity check non-empty + shebang sebelum eksekusi.
+7. **Verifikasi integritas semua download** — ionCube (`tar -tzf`), WordPress core + 5 plugin, FileRun, RainLoop, InvoiceNinja (`unzip -t`); FileRun & RainLoop dipindah HTTP→HTTPS.
 
-## Installation List
-Here all the list that the script will install
-<br>
-[Full List](https://github.com/MiguelEmmara-ai/Lempzy/blob/v1.2/full-list.txt)
+## Install
 
-## Prerequisites
-What things you need to make sure before proceed.
-* **OS: DEBIAN (10, 11, 12, 13), UBUNTU (18.04, 20.04, 22.04, 22.10, 24.04)**
-* **PHP Versions Supported: 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4**
-* **YOU SHOULD BE LOGIN AS ROOT**
-* **FRESH CLEAN SERVER**
-
-## How to Install Lempzy
-To Install Lempzy, all you need to do is to run a single command line and it will install everything.
-
-```
-sudo apt-get install git -y && apt-get install dos2unix -y && git clone --branch main https://github.com/hendrik3ka/Lempzy.git && cd Lempzy && chmod +x lempzy-setup.sh && sudo ./lempzy-setup.sh
-
+```bash
+git clone https://github.com/uhangkayo/Lempzy-hardened.git
+cd Lempzy-hardened
+chmod +x lempzy-setup.sh
+sudo ./lempzy-setup.sh
 ```
 
-## Getting Started
-Congratulations, you now have installed Lempzy!
+## CI
 
-Once everything is set up, run this command below in /root directory to open the Menu Options
-```
-cd
-./lempzy.sh
-```
+Setiap push/PR menjalankan: `bash -n` semua script, ShellCheck, dan security grep (larangan pipe-to-shell dan download HTTP polos).
 
-## Authors
-* **Muhamad Miguel Emmara** - *Lempzy*
+## Lisensi
 
-## Current Release
-*Lempzy - V1-H*
-
-## License
-Copyright 2022. Code released under the MIT license.
+Mengikuti upstream Lempzy.

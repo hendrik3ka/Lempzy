@@ -16,10 +16,10 @@ install_memcached() {
      echo "${grn}Installing Memcached ...${end}"
      echo ""
      sleep 3
-     apt install memcached -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y memcached -y
      echo ""
      sleep 1
-     apt install php-memcached -y
+     DEBIAN_FRONTEND=noninteractive apt-get install -y php-memcached -y
      sleep 1
 
      # Get PHP Installed Version
