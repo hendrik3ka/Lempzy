@@ -4,7 +4,7 @@
 
 ## Fix keamanan yang diterapkan (commit `b2269f0`)
 
-1. **Token bot Telegram dihapus dari source** — sekarang via env `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` dengan fail-fast guard. Token lama WAJIB di-revoke via @BotFather.
+1. **Fungsi notifikasi Telegram dihapus total** — `scripts/telegram_notify.sh` dan semua call site-nya dihapus; alert domain monitor kini hanya ke journalctl/stdout. Token lama yang pernah tertanam di git history upstream tetap WAJIB di-revoke via @BotFather.
 2. **UFW anti-lockout** — port SSH dideteksi otomatis (`ss -tlnp` + `Port` di sshd_config) sebelum `ufw enable`; abort jika tidak ada port SSH terdeteksi.
 3. **MariaDB secure-installation** — password root random, anonymous users dihapus, remote root dimatikan, test db di-drop. Kredensial disimpan via `mysql_config_editor` (login-path `lempzy`).
 4. **`SCRIPT_DIR` robust** — 24× `cd && cd Lempzy` diganti resolusi `BASH_SOURCE` (tidak peduli nama/lokasi clone).

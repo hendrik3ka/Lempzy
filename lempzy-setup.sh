@@ -785,7 +785,6 @@ change_login_greetings
 
 # Enable monitoring wp-admin, wp-includes, index.php, wp-cron.php
 dos2unix scripts/domain_monitor.sh
-dos2unix scripts/telegram_notify.sh
 cp scripts/domain-monitor.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable domain-monitor.service
