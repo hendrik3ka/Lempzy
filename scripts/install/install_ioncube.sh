@@ -23,10 +23,25 @@ install_ioncube() {
      # PHP Version
      PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
-     # Download ioncube
-     wget https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
-     tar -xvzf ioncube_loaders_lin_x86-64.tar.gz
-     rm -f ioncube_loaders_lin_x86-64.tar.gz
+     # Download ioncube (detect architecture)
+     ARCH="$(uname -m 2>/dev/null || echo "")"
+     if [ "$ARCH" = "aarch64" ]; then
+          PKG="ioncube_loaders_lin_aarch64.zip"
+          URL="https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_aarch64.zip"
+          if ! command -v unzip >/dev/null 2>&1; then
+               apt-get update -y >/dev/null 2>&1 || true
+               apt-get install -y unzip >/dev/null 2>&1 || true
+          fi
+          wget -O "$PKG" "$URL"
+          unzip -o "$PKG"
+          rm -f "$PKG"
+     else
+          PKG="ioncube_loaders_lin_x86-64.tar.gz"
+          URL="https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz"
+          wget "$URL"
+          tar -xvzf "$PKG"
+          rm -f "$PKG"
+     fi
 
      # Copy files to modules folder
      sudo cp "ioncube/ioncube_loader_lin_${PHP_VERSION}.so" $MODULES

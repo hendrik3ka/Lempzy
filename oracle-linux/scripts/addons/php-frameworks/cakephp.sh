@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script author: Muhamad Miguel Emmara
-# Install Codeigniter
+# Install CakePHP
 
 set -e
 
@@ -34,13 +34,20 @@ get_nginx_version() {
      nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
 }
 
+nginx_version_is_older_than() {
+     local installed=$1
+     local minimum=$2
+
+     [ "$(printf '%s\n' "$minimum" "$installed" | sort -V | head -n1)" != "$minimum" ]
+}
+
 adjust_vhost_http2_for_nginx_version() {
      local vhost_file=$1
      local nginx_version
 
      nginx_version=$(get_nginx_version)
 
-     if [ -n "$nginx_version" ] && dpkg --compare-versions "$nginx_version" lt "1.25.1"; then
+     if [ -n "$nginx_version" ] && nginx_version_is_older_than "$nginx_version" "1.25.1"; then
           sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
           sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
      fi
@@ -51,7 +58,7 @@ while true; do
      clear
      clear
      echo "########################### SERVER CONFIGURED BY MIGUEL EMMARA ###########################"
-     echo "                                   ${grn}INSTALL CODEIGNITER${end}"
+     echo "                                   ${grn}INSTALL CAKEPHP${end}"
      echo ""
      echo "     __                                    "
      echo "    / /   ___  ____ ___  ____  ____  __  __"
@@ -62,8 +69,8 @@ while true; do
      echo ""
      echo "${grn}Press [CTRL + C] to cancel...${end}"
 
-     echo "Note* this will erase all of your data on your domain folder, then install Codeigniter!"
-     echo "Preferably install Codeigniter on your subdomain [eg, manage.domain.com]"
+     echo "Note* this will erase all of your data on your domain folder, then install CakePHP!"
+     echo "Preferably install CakePHP on your subdomain [eg, manage.domain.com]"
      echo "Feel free to backup any important files before hand!"
      echo ""
      echo "Here all the domain on you server"
@@ -134,13 +141,12 @@ change_vhost() {
      configName=$domain
      cd $sitesAvailable
      cp /root/Lempzy/scripts/vhost-nocache $sitesAvailable$domain
-     adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
 }
 
-# Install Codeigniter
-install_codeigniter() {
+# Install CakePHP
+install_cakephp() {
      rm -rf /var/www/$domain/*
      cd /var/www/$domain/
 
@@ -154,22 +160,17 @@ install_codeigniter() {
           read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
      done
 
-     composer create-project codeigniter4/appstarter $appname2 --no-interaction
+     composer create-project --prefer-dist cakephp/app:~4.0 $appname2 --no-interaction
      cd $appname2
 
-     # Configure
-     cp env .env
-     sed -i "s/# CI_ENVIRONMENT = production/CI_ENVIRONMENT = development/g" .env
-     sed -i "s/public $baseURL = 'http:\\/\\/localhost:8080\\/';/public $baseURL = 'http:\\/\\/$domain\\/';/g" /var/www/$domain/$appname2/app/Config/App.php
-
      # Setup Database
-     sed -i "s/'username' => '',/'username' => '$USR',"/g /var/www/$domain/$appname2/app/Config/Database.php
-     sed -i "s/'password' => '',/'password' => '$PASS',"/g /var/www/$domain/$appname2/app/Config/Database.php
-     sed -i "s/'database' => '',/'database' => '$DB',"/g /var/www/$domain/$appname2/app/Config/Database.php
+     sed -i "s/'username' => 'my_app',/'username' => '$USR',/g" /var/www/$domain/$appname/config/app_local.php
+     sed -i "s/'password' => 'secret',/'password' => '$PASS',/g" /var/www/$domain/$appname/config/app_local.php
+     sed -i "s/'database' => 'my_app',/'password' => '$DB',/g" /var/www/$domain/$appname/config/app_local.php
 
-     chown -R www-data.www-data /var/www/$domain/$appname2/writable
+     chown -R nginx:nginx /var/www/$domain/$appname2/
 
-     sed -i "s/root \\/var\\/www\\/$domain;/root \\/var\\/www\\/$domain\\/$appname2\\/public;/g" /etc/nginx/sites-available/$domain
+     sed -i "s/root \\/var\\/www\\/$domain;/root \\/var\\/www\\/$domain\\/$appname2;/g" /etc/nginx/sites-available/$domain
 
 }
 
@@ -179,14 +180,18 @@ restart_service() {
      echo ""
      sleep 1
      systemctl restart nginx
-     systemctl restart php$PHP_VERSION-fpm.service
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+     else
+          systemctl restart php-fpm.service
+     fi
 }
 
 # Run
 check_if_domain_exist
 create_database
 change_vhost
-install_codeigniter
+install_cakephp
 restart_service
 
 # Success Prompt

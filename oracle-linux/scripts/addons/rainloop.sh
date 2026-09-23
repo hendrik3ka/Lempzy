@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script author: Muhamad Miguel Emmara
-# Install Filerun
+# Install Rainloop
 
 set -e
 
@@ -31,19 +31,26 @@ domainRegex="^[a-zA-Z0-9]"
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
 get_nginx_version() {
-    nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
+     nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
+}
+
+nginx_version_is_older_than() {
+     local installed=$1
+     local minimum=$2
+
+     [ "$(printf '%s\n' "$minimum" "$installed" | sort -V | head -n1)" != "$minimum" ]
 }
 
 adjust_vhost_http2_for_nginx_version() {
-    local vhost_file=$1
-    local nginx_version
+     local vhost_file=$1
+     local nginx_version
 
-    nginx_version=$(get_nginx_version)
+     nginx_version=$(get_nginx_version)
 
-    if [ -n "$nginx_version" ] && dpkg --compare-versions "$nginx_version" lt "1.25.1"; then
-        sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
-        sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
-    fi
+     if [ -n "$nginx_version" ] && nginx_version_is_older_than "$nginx_version" "1.25.1"; then
+          sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
+          sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
+     fi
 }
 
 # Ask the user to add domain name
@@ -51,7 +58,7 @@ while true; do
     clear
     clear
     echo "########################### SERVER CONFIGURED BY MIGUEL EMMARA ###########################"
-    echo "                                   ${grn}INSTALL FILERUN${end}"
+    echo "                                   ${grn}INSTALL RAINLOOP${end}"
     echo ""
     echo "     __                                    "
     echo "    / /   ___  ____ ___  ____  ____  __  __"
@@ -62,8 +69,7 @@ while true; do
     echo ""
     echo "${grn}Press [CTRL + C] to cancel...${end}"
 
-    echo "Note* this will erase all of your data on your domain folder, then install Filerun!"
-    echo "Preferably install Filerun on your subdomain [eg, manage.domain.com]"
+    echo "Note* this will erase all of your data on your domain folder, then install rainloop webmail!"
     echo "Feel free to backup any important files before hand!"
     echo ""
     echo "Here all the domain on you server"
@@ -73,7 +79,7 @@ while true; do
     ls -I default -I phpmyadmin -I filemanager -1 /etc/nginx/sites-enabled/
     echo "${end}_____________"
     echo ""
-    read -p ${grn}"Please provide domain [eg, manage.domain.com]${end}: " domain
+    read -p ${grn}"Please provide domain to be installed with rainloop${end}: " domain
     read -p ${grn}"Please type your domain one more time${end}: " domain2
     echo
     [ "$domain" = "$domain2" ] && break
@@ -99,17 +105,15 @@ check_if_domain_exist() {
     fi
 }
 
-# Install Filerun
-install_filerun() {
+# Intstall RianLoop
+install_rainloop() {
     rm -rf /var/www/$domain/*
-    cd /var/www/$domain/
-    wget -O FileRun.zip http://www.filerun.com/download-latest
-    unzip FileRun.zip
-    chown -R www-data:www-data /var/www/$domain
-    chown -R www-data:www-data /var/www/$domain/system/data
-    chown www-data:www-data /var/www/
-    chown -R $USER:$USER /var/www/$domain       # JUST TO MAKE SURE
-    chown -R www-data:www-data /var/www/$domain # JUST TO MAKE SURE
+    cd /var/www/$domain
+    wget http://www.rainloop.net/repository/webmail/rainloop-latest.zip
+    unzip rainloop-latest.zip
+    rm rainloop-latest.zip
+    systemctl restart nginx
+    chown -R nginx:nginx /var/www/$domain
 }
 
 # Change vhost to no fastcgi cache.
@@ -117,40 +121,13 @@ change_vhost() {
     configName=$domain
     cd $sitesAvailable
     cp /root/Lempzy/scripts/vhost-nocache $sitesAvailable$domain
-    adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
     sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
-    sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
-}
-
-# Create NEW Database For Filerun
-create_filerun_database() {
-    domainClear=${domain//./}                                                          # Domain name variable
-    domainClear2=${domainClear//-/}                                                    # Domain name variable
-    password_filerun=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1) # Generate random password and save it to password_filerun variable.
-
-        mysql -uroot <<MYSQL_SCRIPT
-        CREATE DATABASE filerun_db_$domainClear2;
-        CREATE USER 'filerun_usr_$domainClear2'@'localhost' IDENTIFIED BY '$password_filerun';
-        GRANT ALL PRIVILEGES ON filerun_db_$domainClear2.* TO 'filerun_usr_$domainClear2'@'localhost';
-        FLUSH PRIVILEGES;
-MYSQL_SCRIPT
-}
-
-# Restart nginx and php-fpm
-restart_service() {
-    echo "Restart Nginx & PHP-FPM ..."
-    echo ""
-    sleep 1
-    systemctl restart nginx
-    systemctl restart php$PHP_VERSION-fpm.service
 }
 
 # Run
 check_if_domain_exist
-install_filerun
+install_rainloop
 change_vhost
-create_filerun_database
-restart_service
 
 # Success Prompt
 clear
@@ -164,10 +141,10 @@ echo " /_____/\___/_/ /_/ /_/ .___/ /___/\__, /"
 echo "                   /_/          /____/_/"
 echo ""
 
-echo "Complete! $domain has been installed with Filerun!"
-echo "Navigate to ${grn}$domain${end} in your browser to configure Filerun"
+echo "${blu}Complete! $domain has been installed with RainLoop Webmail!"
+echo "Navigate to $domain/?admin in your browser to configure RainLoop"
+echo "The default login are:${end}"
 echo ""
-echo "Database Name: filerun_db_$domainClear2"
-echo "User Name: filerun_usr_$domainClear2"
-echo "Password: $password_filerun"
+echo "${grn}Login: admin"
+echo "Password: 12345${end}"
 echo ""

@@ -30,22 +30,6 @@ domainRegex="^[a-zA-Z0-9]"
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
-get_nginx_version() {
-     nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
-}
-
-adjust_vhost_http2_for_nginx_version() {
-     local vhost_file=$1
-     local nginx_version
-
-     nginx_version=$(get_nginx_version)
-
-     if [ -n "$nginx_version" ] && dpkg --compare-versions "$nginx_version" lt "1.25.1"; then
-          sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
-          sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
-     fi
-}
-
 # Ask the user to add domain name
 while true; do
      clear
@@ -156,23 +140,51 @@ install_ssl() {
                  
                  if [[ $confirm =~ ^[Yy]$ ]]; then
                      # Generate Let's Encrypt certificate
-                     if [[ $include_www =~ ^[Yy]$ ]]; then
-                         if certbot --nginx -d "$domain" -d "www.$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
-                             echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
-                             SSL_METHOD="letsencrypt"
-                         else
-                             echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
-                             install_openssl_certificate
-                         fi
-                     else
-                         if certbot --nginx -d "$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
-                             echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
-                             SSL_METHOD="letsencrypt"
-                         else
-                             echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
-                             install_openssl_certificate
-                         fi
-                     fi
+                    if [[ $include_www =~ ^[Yy]$ ]]; then
+                        if certbot --nginx -d "$domain" -d "www.$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
+                            echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+                            SSL_METHOD="letsencrypt"
+                        else
+                            if [ -f "/etc/letsencrypt/live/$domain/fullchain.pem" ] && [ -f "/etc/letsencrypt/live/$domain/privkey.pem" ]; then
+                                echo "${yel}Certificate obtained but Nginx installer failed; proceeding with manual install${end}"
+                                SSL_METHOD="letsencrypt"
+                            else
+                                echo "${yel}Trying standalone Certbot (temporarily stopping Nginx)...${end}"
+                                systemctl stop nginx >/dev/null 2>&1 || true
+                                if certbot certonly --standalone -d "$domain" -d "www.$domain" --email "$ssl_email" --agree-tos --non-interactive --preferred-challenges http; then
+                                    echo "${grn}Let's Encrypt certificate obtained (standalone)${end}"
+                                    SSL_METHOD="letsencrypt"
+                                else
+                                    echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
+                                    SSL_METHOD=""
+                                    install_openssl_certificate
+                                fi
+                                systemctl start nginx >/dev/null 2>&1 || true
+                            fi
+                        fi
+                    else
+                        if certbot --nginx -d "$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
+                            echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+                            SSL_METHOD="letsencrypt"
+                        else
+                            if [ -f "/etc/letsencrypt/live/$domain/fullchain.pem" ] && [ -f "/etc/letsencrypt/live/$domain/privkey.pem" ]; then
+                                echo "${yel}Certificate obtained but Nginx installer failed; proceeding with manual install${end}"
+                                SSL_METHOD="letsencrypt"
+                            else
+                                echo "${yel}Trying standalone Certbot (temporarily stopping Nginx)...${end}"
+                                systemctl stop nginx >/dev/null 2>&1 || true
+                                if certbot certonly --standalone -d "$domain" --email "$ssl_email" --agree-tos --non-interactive --preferred-challenges http; then
+                                    echo "${grn}Let's Encrypt certificate obtained (standalone)${end}"
+                                    SSL_METHOD="letsencrypt"
+                                else
+                                    echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
+                                    SSL_METHOD=""
+                                    install_openssl_certificate
+                                fi
+                                systemctl start nginx >/dev/null 2>&1 || true
+                            fi
+                        fi
+                    fi
                  else
                      echo "${yel}Let's Encrypt cancelled. Installing self-signed certificate...${end}"
                      install_openssl_certificate
@@ -256,8 +268,12 @@ install_nginx_cache() {
      sed -i "s/<?php echo esc_attr( get_option( 'nginx_cache_path' ) ); ?>/\/etc\/nginx\/mycache\/$domain/g" /var/www/$domain/wp-content/plugins/nginx-cache/includes/settings-page.php
      cd
 
-     chown -R www-data:www-data /var/www/$domain
-     systemctl restart php$PHP_VERSION-fpm.service
+    chown -R nginx:nginx /var/www/$domain
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+     else
+          systemctl restart php-fpm.service
+     fi
      systemctl restart nginx
 
      # Add Cache to the server
@@ -269,9 +285,9 @@ add_vhost() {
      configName=$domain
      cd $sitesAvailable
      cp /root/Lempzy/scripts/vhost-fastcgi $sitesAvailable$domain
-     adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
+     sed -i "/http2 on;/d" $sitesAvailable$configName
      
      # Configure SSL certificate paths based on SSL method
      if [ "$SSL_METHOD" = "letsencrypt" ]; then
@@ -283,17 +299,77 @@ add_vhost() {
          # Use OpenSSL certificate paths (default)
          echo "${grn}Configured nginx to use OpenSSL certificates${end}"
      fi
+     
+     NGINX_VERSION=$(nginx -v 2>&1 | awk -F'/' '/nginx/{print $2}' | tr -d ' \r\n')
+     MAJOR="${NGINX_VERSION%%.*}"
+     REST="${NGINX_VERSION#*.}"
+     MINOR="${REST%%.*}"
+     PATCH="${REST#*.}"
+     PATCH="${PATCH%%[^0-9]*}"
+     if nginx -V 2>&1 | grep -q -- "--with-http_v2_module"; then
+          if [ "${MAJOR:-0}" -gt 1 ] || { [ "${MAJOR:-0}" -eq 1 ] && { [ "${MINOR:-0}" -gt 25 ] || { [ "${MINOR:-0}" -eq 25 ] && [ "${PATCH:-0}" -ge 1 ]; }; }; }; then
+               sed -i "/ssl_certificate_key /a \  http2 on;" $sitesAvailable$configName
+          else
+               sed -i "s/listen 443 ssl;/listen 443 ssl http2;/" $sitesAvailable$configName
+               sed -i "s/listen \\[::\\]:443 ssl;/listen [::]:443 ssl http2;/" $sitesAvailable$configName
+          fi
+     fi
+     
+     if [ ! -f /etc/ssl/certs/dhparam.pem ]; then
+          mkdir -p /etc/ssl/certs
+          if command -v openssl >/dev/null 2>&1; then
+               openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+          else
+               sed -i '/^\s*ssl_dhparam\s\+/d' /etc/nginx/nginx.conf
+          fi
+     fi
 }
 
 # PHP POOL SETTING
 setting_php_pool() {
-     cp /root/Lempzy/scripts/phpdotdeb /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     sed -i "s/domain.com/$domain/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     sed -i "s/phpX.X/php$PHP_VERSION/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     echo "" >>/etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     dos2unix /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf >/dev/null 2>&1
-     service php$PHP_VERSION-fpm reload
+     POOL_DIR=""
+     if [ -d "/etc/php/$PHP_VERSION/fpm/pool.d" ]; then
+          POOL_DIR="/etc/php/$PHP_VERSION/fpm/pool.d"
+     elif [ -d "/etc/php-fpm.d" ]; then
+          POOL_DIR="/etc/php-fpm.d"
+     else
+          mkdir -p "/etc/php/$PHP_VERSION/fpm/pool.d" >/dev/null 2>&1 || true
+          POOL_DIR="/etc/php/$PHP_VERSION/fpm/pool.d"
+     fi
+     cp /root/Lempzy/scripts/phpdotdeb "$POOL_DIR/$domain.conf"
+     sed -i "s/domain.com/$domain/g" "$POOL_DIR/$domain.conf"
+     sed -i "s/phpX.X/php$PHP_VERSION/g" "$POOL_DIR/$domain.conf"
+     echo "" >>"$POOL_DIR/$domain.conf"
+     dos2unix "$POOL_DIR/$domain.conf" >/dev/null 2>&1 || true
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl reload php$PHP_VERSION-fpm.service
+     else
+          systemctl reload php-fpm.service
+     fi
 
+}
+
+selinux_fix() {
+     if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
+          if ! command -v semanage >/dev/null 2>&1; then
+               if command -v dnf >/dev/null 2>&1; then
+                    dnf install -y policycoreutils-python-utils >/dev/null 2>&1 || dnf install -y policycoreutils-python >/dev/null 2>&1 || true
+               elif command -v yum >/dev/null 2>&1; then
+                    yum install -y policycoreutils-python >/dev/null 2>&1 || yum install -y policycoreutils-python-utils >/dev/null 2>&1 || true
+               fi
+          fi
+          if command -v semanage >/dev/null 2>&1; then
+               semanage fcontext -a -t httpd_sys_content_t "/var/www/$domain(/.*)" >/dev/null 2>&1 || true
+               semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/$domain/wp-content(/.*)" >/dev/null 2>&1 || true
+          fi
+          chcon -R -t httpd_sys_content_t "/var/www/$domain" >/dev/null 2>&1 || true
+          chcon -R -t httpd_sys_rw_content_t "/var/www/$domain/wp-content" >/dev/null 2>&1 || true
+          restorecon -Rv "/var/www/$domain" >/dev/null 2>&1 || true
+          if [ -S "/run/php-fpm/$domain-fpm.sock" ]; then
+               chcon -t httpd_var_run_t "/run/php-fpm/$domain-fpm.sock" >/dev/null 2>&1 || true
+               restorecon -v "/run/php-fpm/$domain-fpm.sock" >/dev/null 2>&1 || true
+          fi
+     fi
 }
 
 # Create Symbolic Links
@@ -309,8 +385,11 @@ restart_services() {
      echo ""
      sleep 1
      systemctl restart nginx
-     systemctl restart php$PHP_VERSION-fpm.service
-
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+     else
+          systemctl restart php-fpm.service
+     fi
 }
 
 # Run
@@ -323,6 +402,7 @@ install_common_plugin
 install_nginx_cache
 add_vhost
 setting_php_pool
+selinux_fix
 create_symbolic_links
 restart_services
 

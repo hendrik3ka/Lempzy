@@ -34,13 +34,20 @@ get_nginx_version() {
      nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
 }
 
+nginx_version_is_older_than() {
+     local installed=$1
+     local minimum=$2
+
+     [ "$(printf '%s\n' "$minimum" "$installed" | sort -V | head -n1)" != "$minimum" ]
+}
+
 adjust_vhost_http2_for_nginx_version() {
      local vhost_file=$1
      local nginx_version
 
      nginx_version=$(get_nginx_version)
 
-     if [ -n "$nginx_version" ] && dpkg --compare-versions "$nginx_version" lt "1.25.1"; then
+     if [ -n "$nginx_version" ] && nginx_version_is_older_than "$nginx_version" "1.25.1"; then
           sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
           sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
      fi
@@ -103,12 +110,12 @@ install_invoice_ninja() {
      cd /var/www/$domain/
      wget https://github.com/invoiceninja/invoiceninja/releases/download/v5.5.35/invoiceninja.zip
      unzip invoiceninja.zip
-     chown -R www-data:www-data /var/www/$domain
-     chown -R www-data:www-data /var/www/$domain
+     chown -R nginx:nginx /var/www/$domain
+     chown -R nginx:nginx /var/www/$domain
      sudo chmod -R g+s /var/www/$domain
-     chown www-data:www-data /var/www/
+     chown nginx:nginx /var/www/
      chown -R $USER:$USER /var/www/$domain       # JUST TO MAKE SURE
-     chown -R www-data:www-data /var/www/$domain # JUST TO MAKE SURE
+     chown -R nginx:nginx /var/www/$domain # JUST TO MAKE SURE
 }
 
 # Change vhost to no fastcgi cache made for InvoiceNinja
@@ -116,7 +123,6 @@ vhost_switch() {
      configName=$domain
      cd $sitesAvailable
      cp /root/Lempzy/scripts/vhost-nocache $sitesAvailable$domain
-     adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
 }
@@ -179,7 +185,11 @@ echo "Restart Nginx & PHP-FPM ..."
 echo ""
 sleep 1
 systemctl restart nginx
+if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
 systemctl restart php$PHP_VERSION-fpm.service
+else
+systemctl restart php-fpm.service
+fi
 
 # Success Prompt
 clear

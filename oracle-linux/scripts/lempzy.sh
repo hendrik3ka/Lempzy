@@ -1,0 +1,732 @@
+#!/bin/bash
+
+# Script author: Muhamad Miguel Emmara
+# Main Menu of the scripts
+
+set -e
+
+# Colours
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+yel=$'\e[1;33m'
+blu=$'\e[1;34m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+end=$'\e[0m'
+
+# Get PHP Installed Version
+PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+
+main_menu() {
+  NORMAL=$(echo "\033[m")
+  MENU=$(echo "\033[36m")   #Blue
+  NUMBER=$(echo "\033[33m") #yellow
+  FGRED=$(echo "\033[41m")
+  RED_TEXT=$(echo "\033[31m")
+  ENTER_LINE=$(echo "\033[33m")
+
+  clear
+  # display menu
+  echo "Server Name - ${grn}$(hostname)${end} - Lempzy V1.3"
+  echo "-------------------------------------------------------------------------"
+  echo "M A I N - M E N U"
+  echo "Script By"
+  echo ""
+  echo "     __                                    "
+  echo "    / /   ___  ____ ___  ____  ____  __  __"
+  echo "   / /   / _ \/ __ \`__ \/ __ \/_  / / / / /"
+  echo "  / /___/  __/ / / / / / /_/ / / /_/ /_/ /"
+  echo " /_____/\___/_/ /_/ /_/ .___/ /___/\__, /"
+  echo "                   /_/          /____/_/"
+  echo ""
+  echo "-------------------------------------------------------------------------"
+  echo "Choose Your Options"
+  echo ""
+  echo "  ${grn}1) DOMAIN MENU >"
+  echo "  2) DATABASE MENU >"
+  echo "  3) ADD-ONS APPS INSTALLER MENU >"
+  echo "  4) INSTALL PHP FRAMEWORKS >"
+  echo "  5) SHOW CURRENT DOMAIN"
+  echo "  6) SHOW CURRENT DATABASE"
+  echo "  7) CHANGE PORT SSH"
+  echo "  8) REFRESH SERVER"
+  echo "  9) CLEAR CACHE RAM"
+  echo "  10) ${red}RESTART SERVER${end}"
+  echo "  11) MIGRATE"
+  echo "  12) IPv6 CONFIGURATION"
+  echo "  13) UPDATE LEMPZY"
+  echo "  ${grn}14) EXIT MENU${end}"
+  echo ""
+  read -p "Choose your option [1-14]: " choice
+
+  while [ choice != '' ]; do
+    if [[ $choice = "" ]]; then
+      exit
+    else
+      case $choice in
+      1)
+        clear
+        # option_picked "Sub Menu 1";
+        sub_menu1
+        ;;
+
+      2)
+        clear
+        # option_picked "Sub Menu 2";
+        sub_menu2
+        ;;
+
+      3)
+        clear
+        # option_picked "Sub Menu 3";
+        sub_menu3
+        ;;
+
+      4)
+        clear
+        # option_picked "Sub Menu 4";
+        sub_menu4
+        ;;
+
+      5)
+        # Show Domain
+        SHOW_DOMAIN=/root/Lempzy/scripts/domain-menu/showdomain.sh
+
+        if test -f "$SHOW_DOMAIN"; then
+          source $SHOW_DOMAIN
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot View Domains${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      6)
+        # Show Databases
+        SHOW_DATABASES=/root/Lempzy/scripts/database-menu/show-databases.sh
+
+        if test -f "$SHOW_DATABASES"; then
+          source $SHOW_DATABASES
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot View Databases${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      7)
+        # Change Port SSHD
+        CHANGE_PORT_SSHD=/root/Lempzy/scripts/main-menu/changeportsshd.sh
+
+        if test -f "$CHANGE_PORT_SSHD"; then
+          source $CHANGE_PORT_SSHD
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Change Port${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      8)
+        clear
+        if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+        else
+          systemctl restart php-fpm.service
+        fi
+        systemctl restart nginx
+        echo "${cyn}Server Refreshed!${end}"
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      9)
+        clear
+        echo 3 >/proc/sys/vm/drop_caches
+        echo "${cyn}RAM CACHE CLEARED!${end}"
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      10)
+        # Restart Server
+        RESTART_SERVER=/root/Lempzy/scripts/main-menu/restartserver.sh
+
+        if test -f "$RESTART_SERVER"; then
+          source $RESTART_SERVER
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Restart Server${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      11)
+        # Migrate
+        MIGRATE_SCRIPT=/root/Lempzy/scripts/main-menu/migrate.sh
+
+        if test -f "$MIGRATE_SCRIPT"; then
+          source $MIGRATE_SCRIPT
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find Migrate script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      12)
+        # IPv6 Configuration
+        IPV6_CONFIG_SCRIPT=/root/Lempzy/scripts/main-menu/ipv6.sh
+
+        if test -f "$IPV6_CONFIG_SCRIPT"; then
+          source $IPV6_CONFIG_SCRIPT
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find IPv6 Configuration script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      13)
+        # Update Lempzy
+        clear
+        echo "${grn}Updating Lempzy...${end}"
+        echo ""
+        
+        # Navigate to root directory
+        cd /root
+        
+        # Remove old Lempzy directory if it exists
+        if [ -d "Lempzy" ]; then
+          echo "${yel}Removing old Lempzy directory...${end}"
+          rm -rf Lempzy
+        fi
+        
+        # Clone the latest version
+        echo "${grn}Cloning latest Lempzy from GitHub...${end}"
+        if git clone --branch main https://github.com/hendrik3ka/Lempzy.git; then
+          echo "${grn}Successfully cloned Lempzy repository${end}"
+          
+          # Set permissions for setup script
+          chmod +x Lempzy/lempzy-setup.sh
+          
+          # Copy lempzy.sh script (like lines 805-807 in lempzy-setup.sh)
+          cp Lempzy/scripts/lempzy.sh /root
+          dos2unix /root/lempzy.sh
+          chmod +x /root/lempzy.sh
+          
+          echo "${grn}Lempzy has been successfully updated!${end}"
+          echo "${yel}Please restart the menu to use the updated version.${end}"
+        else
+          echo "${red}Failed to clone Lempzy repository. Please check your internet connection.${end}"
+        fi
+        
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      14)
+        clear
+        echo "Bye!"
+        echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
+        exit
+        ;;
+
+      *)
+        echo "Error: Invalid option..."
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+      esac
+    fi
+  done
+}
+
+function option_picked() {
+  COLOR='\033[01;31m' # bold red
+  RESET='\033[00;00m' # normal white
+  MESSAGE=${@:-"${RESET}Error: No message passed"}
+  echo -e "${COLOR}${MESSAGE}${RESET}"
+}
+
+sub_menu1() {
+  NORMAL=$(echo "\033[m")
+  MENU=$(echo "\033[36m")   #Blue
+  NUMBER=$(echo "\033[33m") #yellow
+  FGRED=$(echo "\033[41m")
+  RED_TEXT=$(echo "\033[31m")
+  ENTER_LINE=$(echo "\033[33m")
+
+  clear
+  echo "Server Name - ${grn}$(hostname)${end} - Lempzy V1.3"
+  echo "-------------------------------------------------------------------------"
+  echo "D O M A I N - M E N U"
+  echo "Script By"
+  echo ""
+  echo ""
+  echo "     __                                    "
+  echo "    / /   ___  ____ ___  ____  ____  __  __"
+  echo "   / /   / _ \/ __ \`__ \/ __ \/_  / / / / /"
+  echo "  / /___/  __/ / / / / / /_/ / / /_/ /_/ /"
+  echo " /_____/\___/_/ /_/ /_/ .___/ /___/\__, /"
+  echo "                   /_/          /____/_/"
+  echo ""
+  echo "-------------------------------------------------------------------------"
+  echo "Choose Your Options"
+  echo ""
+  echo "  ${grn}1) ADD DOMAIN / SUB-DOMAIN"
+  echo "  2) ADD DOMAIN / SUB-DOMAIN + INSTALL WORDPRESS"
+  echo "  3) ADD LET'S ENCRYPT SSL TO EXISTING DOMAIN"
+  echo "  4) SHOW CURRENT DOMAIN"
+  echo "  5) BACKUP WEBSITE"
+  echo "  6) DELETE DOMAIN / SUB-DOMAIN"
+  echo "  7) BACK TO MAIN MENU <"
+  echo "  8) EXIT MENU${end}"
+  echo ""
+  read -p "Choose your option [1-8]: " sub_menu_1
+
+  while [ sub_menu_1 != '' ]; do
+    if [[ $sub_menu_1 = "" ]]; then
+      exit
+    else
+      case $sub_menu_1 in
+
+      1)
+        # ADD DOMAIN / SUB-DOMAIN
+        DOMAIN1=/root/Lempzy/scripts/domain-menu/domain1.sh
+
+        if test -f "$DOMAIN1"; then
+          source $DOMAIN1
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Add Domain${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      2)
+        # ADD DOMAIN
+        DOMAIN2=/root/Lempzy/scripts/domain-menu/domain2.sh
+
+        if test -f "$DOMAIN2"; then
+          source $DOMAIN2
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Add Domain${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      3)
+        # ADD LET'S ENCRYPT SSL TO EXISTING DOMAIN
+        LETSENCRYPT_AUTO=/root/Lempzy/scripts/domain-menu/letsencrypt_auto.sh
+
+        if test -f "$LETSENCRYPT_AUTO"; then
+          source $LETSENCRYPT_AUTO
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find Let's Encrypt automation script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      4)
+        # Show Domain
+        SHOW_DOMAIN=/root/Lempzy/scripts/domain-menu/showdomain.sh
+
+        if test -f "$SHOW_DOMAIN"; then
+          source $SHOW_DOMAIN
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot View Domains${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      5)
+        # Back Up Web Data
+        BACKUP_WEB_DATA=/root/Lempzy/scripts/domain-menu/backupwebdata.sh
+
+        if test -f "$BACKUP_WEB_DATA"; then
+          source $BACKUP_WEB_DATA
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Back Up Web Data${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      6)
+        # DELETE DOMAIN / SUB-DOMAIN
+        DELETE_DOMAIN=/root/Lempzy/scripts/domain-menu/delete.sh
+
+        if test -f "$DELETE_DOMAIN"; then
+          source $DELETE_DOMAIN
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Delete Domains${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+
+      7)
+        clear
+        main_menu
+        ;;
+
+      8)
+        clear
+        echo "Bye!"
+        echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
+        exit
+        ;;
+
+      *)
+        echo "Error: Invalid option..."
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu1
+        ;;
+      esac
+    fi
+  done
+}
+
+sub_menu2() {
+  NORMAL=$(echo "\033[m")
+  MENU=$(echo "\033[36m")   #Blue
+  NUMBER=$(echo "\033[33m") #yellow
+  FGRED=$(echo "\033[41m")
+  RED_TEXT=$(echo "\033[31m")
+  ENTER_LINE=$(echo "\033[33m")
+
+  clear
+  echo "Server Name - ${grn}$(hostname)${end} - Lempzy V1.3"
+  echo "-------------------------------------------------------------------------"
+  echo "D A T A B A S E - M E N U"
+  echo "Script By"
+  echo ""
+  echo ""
+  echo "     __                                    "
+  echo "    / /   ___  ____ ___  ____  ____  __  __"
+  echo "   / /   / _ \/ __ \`__ \/ __ \/_  / / / / /"
+  echo "  / /___/  __/ / / / / / /_/ / / /_/ /_/ /"
+  echo " /_____/\___/_/ /_/ /_/ .___/ /___/\__, /"
+  echo "                   /_/          /____/_/"
+  echo ""
+  echo "-------------------------------------------------------------------------"
+  echo "Choose Your Options"
+  echo ""
+  echo "  ${grn}1) CREATE DATABASE"
+  echo "  2) DELETE DATABASE"
+  echo "  3) SHOW CURRENT DATABASE"
+  echo "  4) BACK TO MAIN MENU <"
+  echo "  5) EXIT MENU${end}"
+  echo ""
+  read -p "Choose your option [1-5]: " sub_menu_2
+
+  while [ sub_menu_2 != '' ]; do
+    if [[ $sub_menu_2 = "" ]]; then
+      exit
+    else
+      case $sub_menu_2 in
+
+      1)
+        # Create Database
+        CREATE_DATABASE=/root/Lempzy/scripts/database-menu/create-database.sh
+
+        if test -f "$CREATE_DATABASE"; then
+          source $CREATE_DATABASE
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Create Database${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu2
+        ;;
+
+      2)
+
+        # Delete Database
+        DELETE_DATABASE=/root/Lempzy/scripts/database-menu/delete-database.sh
+
+        if test -f "$DELETE_DATABASE"; then
+          source $DELETE_DATABASE
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Delete Database${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu2
+        ;;
+
+      3)
+        # Show Databases
+        SHOW_DATABASES=/root/Lempzy/scripts/database-menu/show-databases.sh
+
+        if test -f "$SHOW_DATABASES"; then
+          source $SHOW_DATABASES
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot View Databases${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu2
+        ;;
+
+      4)
+        clear
+        main_menu
+        ;;
+
+      5)
+        clear
+        echo "Bye!"
+        echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
+        exit
+        ;;
+
+      *)
+        echo "Error: Invalid option..."
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu2
+        ;;
+      esac
+    fi
+  done
+}
+
+sub_menu3() {
+  NORMAL=$(echo "\033[m")
+  MENU=$(echo "\033[36m")   #Blue
+  NUMBER=$(echo "\033[33m") #yellow
+  FGRED=$(echo "\033[41m")
+  RED_TEXT=$(echo "\033[31m")
+  ENTER_LINE=$(echo "\033[33m")
+
+  clear
+  echo "Server Name - ${grn}$(hostname)${end} - Lempzy V1.3"
+  echo "-------------------------------------------------------------------------"
+  echo "ADD-ONS APPS INSTALLER - M E N U"
+  echo "Script By"
+  echo ""
+  echo ""
+  echo "     __                                    "
+  echo "    / /   ___  ____ ___  ____  ____  __  __"
+  echo "   / /   / _ \/ __ \`__ \/ __ \/_  / / / / /"
+  echo "  / /___/  __/ / / / / / /_/ / / /_/ /_/ /"
+  echo " /_____/\___/_/ /_/ /_/ .___/ /___/\__, /"
+  echo "                   /_/          /____/_/"
+  echo ""
+  echo "-------------------------------------------------------------------------"
+  echo "Choose Your Options"
+  echo ""
+  echo "  ${grn}1) INSTALL RAINLOOP"
+  echo "  2) INSTALL FILERUN"
+  echo "  3) INSTALL INVOICENINJA"
+  echo "  4) BACK TO MAIN MENU <"
+  echo "  5) EXIT MENU${end}"
+  echo ""
+  read -p "Choose your option [1-5]: " sub_menu_3
+
+  while [ sub_menu_3 != '' ]; do
+    if [[ $sub_menu_3 = "" ]]; then
+      exit
+    else
+      case $sub_menu_3 in
+
+      1)
+        # Install Rainloop
+        RAINLOOP=/root/Lempzy/scripts/addons/rainloop.sh
+
+        if test -f "$RAINLOOP"; then
+          source $RAINLOOP
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install RAINLOOP${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      2)
+        # Install Filerun
+        FILERUN=/root/Lempzy/scripts/addons/filerun.sh
+
+        if test -f "$FILERUN"; then
+          source $FILERUN
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install Filerun${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      3)
+        # Install Invoiceninja
+        INVOICENINJA=/root/Lempzy/scripts/addons/invoiceninja.sh
+
+        if test -f "$INVOICENINJA"; then
+          source $INVOICENINJA
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install Invoiceninja${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      4)
+        clear
+        main_menu
+        ;;
+
+      5)
+        clear
+        echo "Bye!"
+        echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
+        exit
+        ;;
+
+      *)
+        echo "Error: Invalid option..."
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu3
+        ;;
+      esac
+    fi
+  done
+}
+
+sub_menu4() {
+  NORMAL=$(echo "\033[m")
+  MENU=$(echo "\033[36m")   #Blue
+  NUMBER=$(echo "\033[33m") #yellow
+  FGRED=$(echo "\033[41m")
+  RED_TEXT=$(echo "\033[31m")
+  ENTER_LINE=$(echo "\033[33m")
+
+  clear
+  echo "Server Name - ${grn}$(hostname)${end} - Lempzy V1.3"
+  echo "-------------------------------------------------------------------------"
+  echo "PHP FRAMEWORKS INSTALLER - M E N U"
+  echo "Script By"
+  echo ""
+  echo ""
+  echo "     __                                    "
+  echo "    / /   ___  ____ ___  ____  ____  __  __"
+  echo "   / /   / _ \/ __ \`__ \/ __ \/_  / / / / /"
+  echo "  / /___/  __/ / / / / / /_/ / / /_/ /_/ /"
+  echo " /_____/\___/_/ /_/ /_/ .___/ /___/\__, /"
+  echo "                   /_/          /____/_/"
+  echo ""
+  echo "-------------------------------------------------------------------------"
+  echo "Choose Your Options"
+  echo ""
+  echo "  ${grn}1) INSTALL LARAVEL"
+  echo "  2) INSTALL CODEIGNITER"
+  echo "  3) INSTALL CAKEPHP"
+  echo "  4) INSTALL SYMFONY"
+  echo "  5) BACK TO MAIN MENU <"
+  echo "  6) EXIT MENU${end}"
+  echo ""
+  read -p "Choose your option [1-6]: " sub_menu4
+
+  while [ sub_menu4 != '' ]; do
+    if [[ $sub_menu4 = "" ]]; then
+      exit
+    else
+      case $sub_menu4 in
+
+      1)
+        # Install Laravel
+        LARAVEL=/root/Lempzy/scripts/addons/php-frameworks/laravel.sh
+
+        if test -f "$LARAVEL"; then
+          source $LARAVEL
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install LARAVEL${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      2)
+        # Install Codeigniter
+        CODEIGNITER=/root/Lempzy/scripts/addons/php-frameworks/codeigniter.sh
+
+        if test -f "$CODEIGNITER"; then
+          source $CODEIGNITER
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install CODEIGNITER${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      3)
+        # Install CakePHP
+        CAKEPHP=/root/Lempzy/scripts/addons/php-frameworks/cakephp.sh
+
+        if test -f "$CAKEPHP"; then
+          source $CAKEPHP
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install CAKEPHP${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      4)
+        # Install Symfony
+        SYMFONY=/root/Lempzy/scripts/addons/php-frameworks/symfony.sh
+
+        if test -f "$SYMFONY"; then
+          source $SYMFONY
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot Install SYMFONY${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      5)
+        clear
+        main_menu
+        ;;
+
+      6)
+        clear
+        echo "Bye!"
+        echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
+        exit
+        ;;
+
+      *)
+        echo "Error: Invalid option..."
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        sub_menu4
+        ;;
+      esac
+    fi
+  done
+}
+
+clear
+main_menu

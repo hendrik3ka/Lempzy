@@ -30,22 +30,6 @@ domainRegex="^[a-zA-Z0-9]"
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
-get_nginx_version() {
-     nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
-}
-
-adjust_vhost_http2_for_nginx_version() {
-     local vhost_file=$1
-     local nginx_version
-
-     nginx_version=$(get_nginx_version)
-
-     if [ -n "$nginx_version" ] && dpkg --compare-versions "$nginx_version" lt "1.25.1"; then
-          sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
-          sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
-     fi
-}
-
 # Ask the user to add domain name
 while true; do
 
@@ -212,8 +196,12 @@ add_html_file_test() {
      chown -R $USER:$USER /var/www/$domain
      nginx -t
      systemctl reload nginx
-     chown -R www-data:www-data /var/www/$domain
-     systemctl restart php$PHP_VERSION-fpm.service
+    chown -R nginx:nginx /var/www/$domain
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+     else
+          systemctl restart php-fpm.service
+     fi
      systemctl restart nginx
 
 }
@@ -226,9 +214,9 @@ add_vhost() {
      configName=$domain
      cd $sitesAvailable
      cp /root/Lempzy/scripts/vhost-fastcgi $sitesAvailable$domain
-     adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
+     sed -i "/http2 on;/d" $sitesAvailable$configName
      
      # Configure SSL certificate paths based on SSL method
      if [ "$SSL_METHOD" = "letsencrypt" ]; then
@@ -240,16 +228,61 @@ add_vhost() {
          # Use OpenSSL certificate paths (default)
          echo "${grn}Configured nginx to use OpenSSL certificates${end}"
      fi
+     
+     NGINX_VERSION=$(nginx -v 2>&1 | awk -F'/' '/nginx/{print $2}' | tr -d ' \r\n')
+     MAJOR="${NGINX_VERSION%%.*}"
+     REST="${NGINX_VERSION#*.}"
+     MINOR="${REST%%.*}"
+     PATCH="${REST#*.}"
+     PATCH="${PATCH%%[^0-9]*}"
+     if nginx -V 2>&1 | grep -q -- "--with-http_v2_module"; then
+          if [ "${MAJOR:-0}" -gt 1 ] || { [ "${MAJOR:-0}" -eq 1 ] && { [ "${MINOR:-0}" -gt 25 ] || { [ "${MINOR:-0}" -eq 25 ] && [ "${PATCH:-0}" -ge 1 ]; }; }; }; then
+               sed -i "/ssl_certificate_key /a \  http2 on;" $sitesAvailable$configName
+          else
+               sed -i "s/listen 443 ssl;/listen 443 ssl http2;/" $sitesAvailable$configName
+               sed -i "s/listen \\[::\\]:443 ssl;/listen [::]:443 ssl http2;/" $sitesAvailable$configName
+          fi
+     fi
+     
+     if [ ! -f /etc/ssl/certs/dhparam.pem ]; then
+          mkdir -p /etc/ssl/certs
+          if command -v openssl >/dev/null 2>&1; then
+               openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+          else
+               sed -i '/^\s*ssl_dhparam\s\+/d' /etc/nginx/nginx.conf
+          fi
+     fi
 }
 
 # PHP POOL SETTING
 setting_php_pool() {
-     cp /root/Lempzy/scripts/phpdotdeb /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     sed -i "s/domain.com/$domain/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     sed -i "s/phpX.X/php$PHP_VERSION/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     echo "" >>/etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
-     dos2unix /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf >/dev/null 2>&1
-     service php$PHP_VERSION-fpm reload
+     POOL_DIR=""
+     if [ -d "/etc/php/$PHP_VERSION/fpm/pool.d" ]; then
+          POOL_DIR="/etc/php/$PHP_VERSION/fpm/pool.d"
+     elif [ -d "/etc/php-fpm.d" ]; then
+          POOL_DIR="/etc/php-fpm.d"
+     else
+          mkdir -p "/etc/php/$PHP_VERSION/fpm/pool.d" >/dev/null 2>&1 || true
+          POOL_DIR="/etc/php/$PHP_VERSION/fpm/pool.d"
+     fi
+     cp /root/Lempzy/scripts/phpdotdeb "$POOL_DIR/$domain.conf"
+     sed -i "s/domain.com/$domain/g" "$POOL_DIR/$domain.conf"
+     sed -i "s/phpX.X/php$PHP_VERSION/g" "$POOL_DIR/$domain.conf"
+     echo "" >>"$POOL_DIR/$domain.conf"
+     dos2unix "$POOL_DIR/$domain.conf" >/dev/null 2>&1 || true
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl reload php$PHP_VERSION-fpm.service
+     else
+          systemctl reload php-fpm.service
+     fi
+}
+
+selinux_fix() {
+     if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
+          semanage fcontext -a -t httpd_sys_content_t "/var/www/$domain(/.*)" >/dev/null 2>&1 || true
+          semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/$domain/wp-content(/.*)" >/dev/null 2>&1 || true
+          restorecon -Rv "/var/www/$domain" >/dev/null 2>&1 || true
+     fi
 }
 
 # Create Symbolic Links
@@ -265,7 +298,11 @@ restart_services() {
      echo ""
      sleep 1
      systemctl restart nginx
-     systemctl restart php$PHP_VERSION-fpm.service
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+     else
+          systemctl restart php-fpm.service
+     fi
 
 }
 
@@ -275,6 +312,7 @@ install_ssl
 add_html_file_test
 add_vhost
 setting_php_pool
+selinux_fix
 create_symbolic_links
 restart_services
 

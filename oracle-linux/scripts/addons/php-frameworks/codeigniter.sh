@@ -34,13 +34,20 @@ get_nginx_version() {
      nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
 }
 
+nginx_version_is_older_than() {
+     local installed=$1
+     local minimum=$2
+
+     [ "$(printf '%s\n' "$minimum" "$installed" | sort -V | head -n1)" != "$minimum" ]
+}
+
 adjust_vhost_http2_for_nginx_version() {
      local vhost_file=$1
      local nginx_version
 
      nginx_version=$(get_nginx_version)
 
-     if [ -n "$nginx_version" ] && dpkg --compare-versions "$nginx_version" lt "1.25.1"; then
+     if [ -n "$nginx_version" ] && nginx_version_is_older_than "$nginx_version" "1.25.1"; then
           sed -i 's/listen 443 ssl;/listen 443 ssl http2;/g' "$vhost_file"
           sed -i 's/^[[:space:]]*http2 on;/  # http2 on;/g' "$vhost_file"
      fi
@@ -134,7 +141,6 @@ change_vhost() {
      configName=$domain
      cd $sitesAvailable
      cp /root/Lempzy/scripts/vhost-nocache $sitesAvailable$domain
-     adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
 }
@@ -167,7 +173,7 @@ install_codeigniter() {
      sed -i "s/'password' => '',/'password' => '$PASS',"/g /var/www/$domain/$appname2/app/Config/Database.php
      sed -i "s/'database' => '',/'database' => '$DB',"/g /var/www/$domain/$appname2/app/Config/Database.php
 
-     chown -R www-data.www-data /var/www/$domain/$appname2/writable
+     chown -R nginx:nginx /var/www/$domain/$appname2/writable
 
      sed -i "s/root \\/var\\/www\\/$domain;/root \\/var\\/www\\/$domain\\/$appname2\\/public;/g" /etc/nginx/sites-available/$domain
 
@@ -179,7 +185,11 @@ restart_service() {
      echo ""
      sleep 1
      systemctl restart nginx
-     systemctl restart php$PHP_VERSION-fpm.service
+     if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
+          systemctl restart php$PHP_VERSION-fpm.service
+     else
+          systemctl restart php-fpm.service
+     fi
 }
 
 # Run
