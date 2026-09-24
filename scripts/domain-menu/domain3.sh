@@ -145,22 +145,17 @@ install_ssl() {
                  read -p "${cyn}Continue? (y/n): ${end}" confirm
                  
                  if [[ $confirm =~ ^[Yy]$ ]]; then
-                     # Generate Let's Encrypt certificate
+                     # Defer certificate issuance until the nginx vhost exists.
+                     # Certbot --nginx needs the server block to be present, so
+                     # we only collect the options here and run certbot at the end.
+                     SSL_METHOD="letsencrypt"
+                     LE_EMAIL="$ssl_email"
                      if [[ $include_www =~ ^[Yy]$ ]]; then
-                         if certbot --nginx -d "$domain" -d "www.$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
-                             echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
-                         else
-                             echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
-                             install_openssl_certificate
-                         fi
+                         LE_INCLUDE_WWW="yes"
                      else
-                         if certbot --nginx -d "$domain" --email "$ssl_email" --agree-tos --non-interactive --redirect; then
-                             echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
-                         else
-                             echo "${red}Let's Encrypt failed. Installing self-signed certificate...${end}"
-                             install_openssl_certificate
-                         fi
+                         LE_INCLUDE_WWW="no"
                      fi
+                     echo "${yel}Let's Encrypt will be issued after the nginx vhost is created.${end}"
                  else
                      echo "${yel}Let's Encrypt cancelled. Installing self-signed certificate...${end}"
                      install_openssl_certificate
@@ -223,6 +218,19 @@ add_vhost() {
      adjust_vhost_http2_for_nginx_version "$sitesAvailable$configName"
      sed -i "s/domain.com/$domain/g" $sitesAvailable$configName
      sed -i "s/phpX.X/php$PHP_VERSION/g" $sitesAvailable$configName
+
+     if [ "$SSL_METHOD" = "letsencrypt" ]; then
+         # Build an HTTP-only vhost first. Certbot --nginx (run at the end)
+         # will add the SSL listener, certificates and HTTP->HTTPS redirect.
+         # This keeps "nginx -t" passing even though no certificate files
+         # exist yet.
+         sed -i '/listen 443 ssl http2;/d' $sitesAvailable$configName
+         sed -i '/listen 443 ssl;/d' $sitesAvailable$configName
+         sed -i '/ssl_certificate /d' $sitesAvailable$configName
+         sed -i '/ssl_certificate_key /d' $sitesAvailable$configName
+         sed -i '/http2 on;/d' $sitesAvailable$configName
+         echo "${grn}Configured nginx as HTTP-only (Let's Encrypt will be issued at the end)${end}"
+     fi
 }
 
 # PHP POOL SETTING
@@ -253,6 +261,27 @@ restart_services() {
 
 }
 
+# Run Let's Encrypt certbot after the vhost exists and nginx is reloaded.
+run_letsencrypt() {
+     if [ "$SSL_METHOD" != "letsencrypt" ]; then
+          return
+     fi
+
+     local domains="-d $domain"
+     if [ "$LE_INCLUDE_WWW" = "yes" ]; then
+          domains="-d $domain -d www.$domain"
+     fi
+
+     echo "${grn}Issuing Let's Encrypt certificate...${end}"
+     if certbot --nginx $domains --email "$LE_EMAIL" --agree-tos --non-interactive --redirect; then
+          echo "${grn}Let's Encrypt SSL certificate installed successfully!${end}"
+     else
+          echo "${red}Let's Encrypt failed. Falling back to self-signed certificate...${end}"
+          install_openssl_certificate
+          certbot --nginx $domains --non-interactive >/dev/null 2>&1 || true
+     fi
+}
+
 # Run
 create_database
 install_ssl
@@ -260,6 +289,7 @@ add_html_file_test
 add_vhost
 setting_php_pool
 create_symbolic_links
+run_letsencrypt
 restart_services
 
 # Success Prompt
