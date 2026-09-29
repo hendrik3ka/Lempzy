@@ -87,41 +87,49 @@ report_installation_summary() {
     echo ""
 }
 
-# Function to display countdown and get user input
-countdown_input() {
-    local prompt="$1"
-    local default_choice="$2"
-    local choice=""
-    local timeout=60  # Timeout in seconds
-    local countdown=$timeout
+# Modern option picker using bash built-in `select` (no flicker, no countdown loop).
+# Usage: choice=$(choose_option VAR_NAME default_index "Option 1" "Option 2" ...)
+# - Prints a clean numbered menu to stderr and echoes the chosen option TEXT to stdout.
+# - In non-interactive shells (piped/CI) or when VAR_NAME env is set, it auto-picks:
+#   the env value if provided, otherwise the default index.
+choose_option() {
+    local var_name="$1"
+    local default_index="$2"
+    shift 2
+    local options=("$@")
+    local preselected="${!var_name:-}"
+    local pick=""
 
-    # Send display output to stderr
-    echo "${yel}Auto-selecting default option [$default_choice] in $timeout seconds...${end}" >&2
-    echo "${grn}Press Enter to use default, or type your choice:${end}" >&2
-    echo "" >&2
-
-    # Display countdown timer
-    while [ $countdown -gt 0 ]; do
-        printf "\r${cyn}$prompt (auto-select in %2d seconds): ${end}" "$countdown" >&2
-        # Attempt to read input with a 1-second timeout
-        if read -t 1 -r choice; then
-            # Input received, break the loop
-            break
-        fi
-        ((countdown--))
-    done
-
-    # If no input was provided (timeout or empty input), use default
-    if [ -z "$choice" ]; then
-        choice="$default_choice"
-        echo "" >&2  # Newline for clean output
-        echo "${yel}No input provided, using default: $default_choice${end}" >&2
+    # Non-interactive or pre-selected via environment variable
+    if [[ -n "$preselected" ]]; then
+        pick="$preselected"
+    elif [[ ! -t 0 ]]; then
+        pick="$default_index"
     else
-        echo "" >&2  # Newline for clean output
+        echo "${cyn}Please choose an option (default: $default_index):${end}" >&2
+        local PS3="${cyn}Enter number [${default_index}]: ${end}"
+        select opt in "${options[@]}"; do
+            if [[ -n "$opt" ]]; then
+                pick="$REPLY"
+            elif [[ -z "$REPLY" ]]; then
+                pick="$default_index"
+            else
+                echo "${red}Invalid choice, please try again.${end}" >&2
+                continue
+            fi
+            break
+        done
     fi
 
-    # Return the choice to stdout
-    echo "$choice"
+    # Numeric input -> map to option text; plain text input -> pass through; empty -> default
+    if [[ -z "$pick" ]]; then
+        pick="$default_index"
+    fi
+    if [[ "$pick" =~ ^[0-9]+$ ]] && (( pick >= 1 && pick <= ${#options[@]} )); then
+        echo "${options[$((pick - 1))]}"
+    else
+        echo "$pick"
+    fi
 }
 
 # To Ensure Correct OS Supported Version Is Used
@@ -190,27 +198,19 @@ else
 fi
 
 # Install MariaDB
-echo "${grn}=== MARIADB VERSION SELECTION ===${end}"
-echo "${yel}Choose your preferred MariaDB version:${end}"
-echo "${blu}1) MariaDB 10.11 (LTS) ${grn}[DEFAULT - RECOMMENDED]${end}${end}"
-echo "${blu}2) MariaDB 11.4 (LTS - Latest)${end}"
-echo "${blu}3) MariaDB 10.1 (Legacy - EOL)${end}"
-echo ""
-mariadb_choice=$(countdown_input "${cyn}Enter your choice (1-3): ${end}" "1")
-# Trim whitespace from input
-mariadb_choice=$(echo "$mariadb_choice" | tr -d '[:space:]')
+mariadb_choice=$(choose_option MARIADB_CHOICE 1 "MariaDB 10.11 (LTS) - Recommended" "MariaDB 11.4 (LTS - Latest)" "MariaDB 10.1 (Legacy - EOL)")
 
 # Set MariaDB version based on user choice
 case $mariadb_choice in
-    "1")
+    *"10.11"*)
         SELECTED_MARIADB_VERSION="10.11"
         echo "${grn}Selected MariaDB 10.11 (LTS)${end}"
         ;;
-    "2")
+    *"11.4"*)
         SELECTED_MARIADB_VERSION="11.4"
         echo "${grn}Selected MariaDB 11.4 (LTS)${end}"
         ;;
-    "3")
+    *"10.1"*)
         SELECTED_MARIADB_VERSION="10.1"
         echo "${yel}Warning: MariaDB 10.1 is End-of-Life (EOL) and no longer receives security updates${end}"
         echo "${grn}Selected MariaDB 10.1 (Legacy)${end}"
@@ -247,42 +247,31 @@ fi
 echo ""
 
 # Install PHP And Configure PHP
-echo "${grn}=== PHP VERSION SELECTION ===${end}"
-echo "${yel}Choose your preferred PHP version:${end}"
-echo "${blu}1) PHP 7.4${end}"
-echo "${blu}2) PHP 8.0${end}"
-echo "${blu}3) PHP 8.1${end}"
-echo "${blu}4) PHP 8.2${end}"
-echo "${blu}5) PHP 8.3 ${grn}[DEFAULT]${end}${end}"
-echo "${blu}6) Auto-detect based on OS${end}"
-echo ""
-php_choice=$(countdown_input "${cyn}Enter your choice (1-6): ${end}" "5")
-# Trim whitespace from input
-php_choice=$(echo "$php_choice" | tr -d '[:space:]')
+php_choice=$(choose_option PHP_CHOICE 5 "PHP 7.4" "PHP 8.0" "PHP 8.1" "PHP 8.2" "PHP 8.3 (Default)" "Auto-detect based on OS")
 
 # Set PHP version based on user choice
 case $php_choice in
-    "1")
+    *"7.4"*)
         SELECTED_PHP_VERSION="7.4"
         echo "${grn}Selected PHP 7.4${end}"
         ;;
-    "2")
+    *"8.0"*)
         SELECTED_PHP_VERSION="8.0"
         echo "${grn}Selected PHP 8.0${end}"
         ;;
-    "3")
+    *"8.1"*)
         SELECTED_PHP_VERSION="8.1"
         echo "${grn}Selected PHP 8.1${end}"
         ;;
-    "4")
+    *"8.2"*)
         SELECTED_PHP_VERSION="8.2"
         echo "${grn}Selected PHP 8.2${end}"
         ;;
-    "5")
+    *"8.3"*)
         SELECTED_PHP_VERSION="8.3"
         echo "${grn}Selected PHP 8.3${end}"
         ;;
-    "6"|"")
+    *"Auto-detect"*)
         SELECTED_PHP_VERSION="auto"
         echo "${grn}Using auto-detection based on OS version${end}"
         ;;
@@ -335,19 +324,10 @@ else
 fi
 
 # Install Caching Solution (Memcached/Redis)
-echo "${grn}=== CACHING SOLUTION SELECTION ===${end}"
-echo "${yel}Choose your preferred caching solution:${end}"
-echo "${blu}1) Install Memcached only${end}"
-echo "${blu}2) Install Redis only ${grn}[DEFAULT]${end}${end}"
-echo "${blu}3) Install both Memcached and Redis${end}"
-echo "${blu}4) Skip caching installation${end}"
-echo ""
-cache_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "2")
-# Trim whitespace from input
-cache_choice=$(echo "$cache_choice" | tr -d '[:space:]')
+cache_choice=$(choose_option CACHE_CHOICE 2 "Install Memcached only" "Install Redis only (Default)" "Install both Memcached and Redis" "Skip caching installation")
 
 case $cache_choice in
-    "1")
+    *"Memcached only"*)
         echo "${grn}Installing Memcached...${end}"
         INSTALL_MEMCACHED=scripts/install/install_memcached.sh
         
@@ -368,7 +348,7 @@ case $cache_choice in
             fi
         fi
         ;;
-    "2")
+    *"Redis only"*)
         echo "${grn}Installing Redis...${end}"
         INSTALL_REDIS=scripts/install/install_redis.sh
         INSTALL_PHP_REDIS=scripts/install/install_php_redis.sh
@@ -408,7 +388,7 @@ case $cache_choice in
             fi
         fi
         ;;
-    "3")
+    *"both Memcached and Redis"*)
         echo "${grn}Installing both Memcached and Redis...${end}"
         
         # Install Memcached
@@ -468,7 +448,7 @@ case $cache_choice in
             fi
         fi
         ;;
-    "4")
+    *"Skip caching"*)
         echo "${yel}Skipping caching solution installation...${end}"
         ;;
     *)
@@ -549,19 +529,10 @@ else
 fi
 
 # Install SSL Solution (OpenSSL/Let's Encrypt)
-echo "${grn}=== SSL SOLUTION SELECTION ===${end}"
-echo "${yel}Choose your preferred SSL solution:${end}"
-echo "${blu}1) Install OpenSSL only${end}"
-echo "${blu}2) Install Let's Encrypt (Certbot)${end}"
-echo "${blu}3) Install both OpenSSL and Let's Encrypt ${grn}[DEFAULT]${end}${end}"
-echo "${blu}4) Skip SSL installation${end}"
-echo ""
-ssl_choice=$(countdown_input "${cyn}Enter your choice (1-4): ${end}" "3")
-# Trim whitespace from input
-ssl_choice=$(echo "$ssl_choice" | tr -d '[:space:]')
+ssl_choice=$(choose_option SSL_CHOICE 3 "Install OpenSSL only" "Install Let's Encrypt (Certbot)" "Install both OpenSSL and Let's Encrypt (Default)" "Skip SSL installation")
 
 case $ssl_choice in
-    "1")
+    *"OpenSSL only"*)
         echo "${grn}Installing OpenSSL...${end}"
         INSTALL_OPENSSL=scripts/install/install_openssl.sh
         
@@ -578,7 +549,7 @@ case $ssl_choice in
         fi
     
         ;;
-    "2")
+    *"Let's Encrypt (Certbot)"*)
         echo "${grn}Installing Let's Encrypt (Certbot)...${end}"
         INSTALL_LETSENCRYPT=scripts/install/install_letsencrypt.sh
         
@@ -599,7 +570,7 @@ case $ssl_choice in
             fi
         fi
         ;;
-    "3")
+    *"both OpenSSL and Let's Encrypt"*)
         echo "${grn}Installing both OpenSSL and Let's Encrypt...${end}"
         
         # Install OpenSSL
@@ -636,7 +607,7 @@ case $ssl_choice in
             fi
         fi
         ;;
-    "4")
+    *"Skip SSL"*)
         echo "${yel}Skipping SSL installation...${end}"
         ;;
     *)

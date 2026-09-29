@@ -60,22 +60,50 @@ until [[ $domain =~ $domainRegex ]]; do
     read domain
 done
 
-# Check if domain already added
+domainClear=${domain//./}
+domainClear2=${domainClear//-/}
+
+# Check if nginx config already exists
 if [ -e $sitesAvailable$domain ]; then
-    echo "This domain already exists. Please delete your domain from the main menu options and try again"
-    exit
+    read -p "Nginx config untuk $domain sudah ada. Hapus dan buat ulang? (y/n): " recreate_nginx
+    if [[ $recreate_nginx =~ ^[Yy]$ ]]; then
+         rm -f $sitesAvailable$domain $sitesEnable$domain
+    else
+         echo "Menggunakan nginx config yang sudah ada."
+    fi
 fi
 
-# Check if domain already added var www
+# Check if web root already exists
 if [ -e /var/www/$domain ]; then
-    echo "This domain already exists. Please delete your domain from the main menu options and try again"
-    exit
+    read -p "Direktori /var/www/$domain sudah ada. Hapus dan buat ulang? (y/n): " recreate_webroot
+    if [[ $recreate_webroot =~ ^[Yy]$ ]]; then
+         rm -rf /var/www/$domain
+    else
+         echo "Menggunakan direktori web root yang sudah ada."
+    fi
+fi
+
+# Check if database already exists
+db_exists=""
+if command -v mysql >/dev/null 2>&1; then
+    db_exists=$(mysql -uroot -Nse "SHOW DATABASES LIKE 'database_$domainClear2';" 2>/dev/null)
+fi
+
+if [ "$db_exists" = "database_$domainClear2" ]; then
+    read -p "Database database_$domainClear2 sudah ada, apakah anda ingin menghapus dan membuatnya ulang? (y/n): " recreate_db
+    if [[ $recreate_db =~ ^[Yy]$ ]]; then
+         mysql -uroot <<MYSQL_SCRIPT
+         DROP DATABASE IF EXISTS database_$domainClear2;
+         DROP USER IF EXISTS 'user_$domainClear2'@'localhost';
+MYSQL_SCRIPT
+    else
+         echo "Menggunakan database yang sudah ada. Setup dibatalkan agar kredensial tidak tertimpa."
+         exit
+    fi
 fi
 
 # Create Database
 create_database() {
-     domainClear=${domain//./}
-     domainClear2=${domainClear//-/}
      echo "Type the password for your new $domain database [eg, password123_$domainClear2]"
      echo -n "followed by [ENTER]: "
      read PASS
@@ -175,7 +203,7 @@ install_openssl_certificate() {
 add_html_file_test() {
 
      # Add Domain to the server
-     mkdir /var/www/$domain
+     mkdir -p /var/www/$domain
      if ! echo "domain has been added!" >/var/www/$domain/index.html; then
           echo "There is an ERROR create index.html file"
           exit

@@ -105,7 +105,7 @@ MYSQL_SCRIPT
 
 # Add Domain to the server
 add_domain_nginx() {
-    mkdir /var/www/$domain
+    mkdir -p /var/www/$domain
     chown -R $USER:$USER /var/www/$domain
     nginx -t
     systemctl reload nginx

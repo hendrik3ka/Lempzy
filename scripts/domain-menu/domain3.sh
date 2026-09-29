@@ -191,7 +191,7 @@ install_openssl_certificate() {
 add_html_file_test() {
 
      # Add Domain to the server
-     mkdir /var/www/$domain
+     mkdir -p /var/www/$domain
      if ! echo "domain has been added!" >/var/www/$domain/index.html; then
           echo "There is an ERROR create index.html file"
           exit

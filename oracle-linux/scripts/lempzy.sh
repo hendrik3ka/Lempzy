@@ -199,32 +199,77 @@ main_menu() {
         echo "${grn}Updating Lempzy...${end}"
         echo ""
         
+        temp_dir=""
+        backup_dir=""
+        update_success=false
+        
+        cleanup_update() {
+          if [ -n "$temp_dir" ] && [ -d "$temp_dir" ]; then
+            rm -rf "$temp_dir"
+          fi
+        }
+        
+        rollback_update() {
+          if [ -n "$backup_dir" ] && [ -d "$backup_dir" ]; then
+            rm -rf /root/Lempzy
+            mv "$backup_dir" /root/Lempzy
+            echo "${yel}Rollback completed. Previous Lempzy directory has been restored.${end}"
+          fi
+        }
+        
         # Navigate to root directory
-        cd /root
-        
-        # Remove old Lempzy directory if it exists
-        if [ -d "Lempzy" ]; then
-          echo "${yel}Removing old Lempzy directory...${end}"
-          rm -rf Lempzy
-        fi
-        
-        # Clone the latest version
-        echo "${grn}Cloning latest Lempzy from GitHub...${end}"
-        if git clone --branch main https://github.com/hendrik3ka/Lempzy.git; then
-          echo "${grn}Successfully cloned Lempzy repository${end}"
-          
-          # Set permissions for setup script
-          chmod +x Lempzy/lempzy-setup.sh
-          
-          # Copy lempzy.sh script (like lines 805-807 in lempzy-setup.sh)
-          cp Lempzy/scripts/lempzy.sh /root
-          dos2unix /root/lempzy.sh
-          chmod +x /root/lempzy.sh
-          
-          echo "${grn}Lempzy has been successfully updated!${end}"
-          echo "${yel}Please restart the menu to use the updated version.${end}"
+        if ! cd /root; then
+          echo "${red}Failed to access /root directory.${end}"
+          read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+          main_menu
         else
-          echo "${red}Failed to clone Lempzy repository. Please check your internet connection.${end}"
+          # Create temporary folder for the latest clone
+          temp_dir=$(mktemp -d /tmp/lempzy-update.XXXXXX) || temp_dir=""
+          
+          if [ -z "$temp_dir" ]; then
+            echo "${red}Failed to create temporary directory.${end}"
+          else
+            # Clone the latest version into a temporary folder first
+            echo "${grn}Cloning latest Lempzy from GitHub...${end}"
+            if git clone --branch main https://github.com/hendrik3ka/Lempzy.git "$temp_dir/Lempzy"; then
+              if [ ! -d "$temp_dir/Lempzy/oracle-linux" ]; then
+                echo "${red}The cloned repository does not contain the oracle-linux directory.${end}"
+              else
+                # Backup current Lempzy before replacing it
+                if [ -d "/root/Lempzy" ]; then
+                  backup_dir="/root/Lempzy.backup.$(date +%Y%m%d%H%M%S)"
+                  echo "${yel}Backing up current Lempzy directory to $backup_dir ...${end}"
+                  mv /root/Lempzy "$backup_dir"
+                fi
+                
+                # Replace Lempzy with the oracle-linux variant
+                mkdir -p /root/Lempzy
+                cp -a "$temp_dir/Lempzy/oracle-linux/." /root/Lempzy/
+                chmod +x /root/Lempzy/lempzy-setup.sh
+                
+                # Copy lempzy.sh script (same behavior as installer)
+                cp /root/Lempzy/scripts/lempzy.sh /root/lempzy.sh
+                dos2unix /root/lempzy.sh
+                chmod +x /root/lempzy.sh
+                
+                update_success=true
+              fi
+            else
+              echo "${red}Failed to clone Lempzy repository. Please check your internet connection.${end}"
+            fi
+          fi
+          
+          cleanup_update
+          
+          if [ "$update_success" = true ]; then
+            if [ -n "$backup_dir" ] && [ -d "$backup_dir" ]; then
+              rm -rf "$backup_dir"
+            fi
+            echo "${grn}Lempzy has been successfully updated!${end}"
+            echo "${yel}Please restart the menu to use the updated version.${end}"
+          else
+            rollback_update
+          fi
         fi
         
         read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey

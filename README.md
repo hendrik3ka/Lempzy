@@ -40,6 +40,14 @@ sudo apt-get install git -y && apt-get install dos2unix -y && git clone --branch
 
 ```
 
+### Oracle Linux
+
+On Oracle Linux, use `dnf`. After cloning, copy the `oracle-linux` directory next to `Lempzy`, replace the original `Lempzy` directory with it, then run the setup script:
+
+```
+sudo dnf install git dos2unix -y && git clone --branch main https://github.com/hendrik3ka/Lempzy.git && cp -a Lempzy/oracle-linux ./oracle-linux && rm -rf Lempzy && mv oracle-linux Lempzy && cd Lempzy && chmod +x lempzy-setup.sh && sudo ./lempzy-setup.sh
+```
+
 ## Getting Started
 Congratulations, you now have installed Lempzy!
 
