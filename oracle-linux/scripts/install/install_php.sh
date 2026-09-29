@@ -84,7 +84,13 @@ install_specific_php_version() {
                "8.3") dnf -y module enable php:remi-8.3 ;;
                *) echo "${red}Unsupported PHP version: $php_version${end}"; return 1 ;;
           esac
-          dnf install -y php-fpm php-cli php-common php-mysqlnd php-gd php-curl php-intl php-zip php-mbstring php-opcache php-soap php-pecl-apcu 2>/dev/null || dnf install -y php-fpm php-cli php-common php-mysqlnd php-gd php-curl php-intl php-zip php-mbstring php-opcache php-soap || true
+          # Install core packages (php-fpm is required) separately from optional ones.
+          # If an optional package (e.g. php-pecl-apcu) is missing it must NOT abort
+          # the whole transaction, otherwise php-fpm would never get installed.
+          if ! dnf install -y php-fpm php-cli php-common php-mysqlnd php-gd php-curl php-intl php-zip php-mbstring php-opcache php-soap; then
+               echo "${red}Error: failed to install core PHP packages (incl. php-fpm)${end}"
+          fi
+          dnf install -y php-pecl-apcu 2>/dev/null || echo "${yel}Note: php-pecl-apcu not available, skipped${end}"
      else
           yum install -y "oracle-epel-release-el${MAJOR}" || true
           yum install -y "https://rpms.remirepo.net/enterprise/remi-release-${MAJOR}.rpm"
@@ -97,9 +103,19 @@ install_specific_php_version() {
                "8.3") yum -y module enable php:remi-8.3 ;;
                *) echo "${red}Unsupported PHP version: $php_version${end}"; return 1 ;;
           esac
-          yum install -y php-fpm php-cli php-common php-mysqlnd php-gd php-curl php-intl php-zip php-mbstring php-opcache php-soap php-pecl-apcu || true
+          # Same fix for the yum path: core packages must not be aborted by apcu.
+          if ! yum install -y php-fpm php-cli php-common php-mysqlnd php-gd php-curl php-intl php-zip php-mbstring php-opcache php-soap; then
+               echo "${red}Error: failed to install core PHP packages (incl. php-fpm)${end}"
+          fi
+          yum install -y php-pecl-apcu 2>/dev/null || echo "${yel}Note: php-pecl-apcu not available, skipped${end}"
      fi
-     systemctl enable --now php-fpm 2>/dev/null || true
+     # Verify php-fpm is actually installed before trying to enable/start it.
+     if ! rpm -q php-fpm >/dev/null 2>&1; then
+          echo "${red}Error: php-fpm package is NOT installed. Nginx will not be able to process PHP.${end}"
+          echo "${yel}Try: dnf install -y php-fpm && systemctl enable --now php-fpm${end}"
+     else
+          systemctl enable --now php-fpm 2>/dev/null || true
+     fi
      
      ACTUAL_PHP_VERSION="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "$php_version")"
      

@@ -31,11 +31,13 @@ domainRegex="^[a-zA-Z0-9]"
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
 # Detect the actual PHP-FPM systemd unit name. On Oracle Linux + Remi the
-# service can be named php-fpm.service, php83-php-fpm.service, php8.3-fpm,
-# etc. We resolve it once and cache in FPM_SERVICE. Returns empty if not found.
+# service is typically php-fpm.service (module stream) or php83-php-fpm.service
+# (SCL). We resolve it once and cache in FPM_SERVICE. Returns empty if not found.
 detect_fpm_service() {
+     # Build version-variant names too (e.g. 8.3 -> 83) for Remi SCL naming.
+     local php_v_nodot="${PHP_VERSION//./}"
      local candidates
-     candidates="php$PHP_VERSION-fpm.service php-fpm.service php$PHP_VERSION-fpm php-fpm"
+     candidates="php-fpm.service php$PHP_VERSION-fpm.service php${php_v_nodot}-php-fpm.service php$PHP_VERSION-fpm php${php_v_nodot}-php-fpm php-fpm"
      local c
      for c in $candidates; do
           if systemctl list-unit-files "$c" >/dev/null 2>&1 && systemctl list-unit-files | grep -q "^$c"; then
