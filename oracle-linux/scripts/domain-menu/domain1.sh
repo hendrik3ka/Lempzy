@@ -128,7 +128,7 @@ fi
 # Check if database already exists
 db_exists=""
 if command -v mysql >/dev/null 2>&1; then
-     db_exists=$(mysql -uroot -Nse "SHOW DATABASES LIKE 'database_$domainClear2';" 2>/dev/null)
+     db_exists=$(mysql -uroot -Nse "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'database_$domainClear2';" 2>/dev/null)
 fi
 
 if [ "$db_exists" = "database_$domainClear2" ]; then
@@ -358,6 +358,7 @@ selinux_fix() {
      if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
           semanage fcontext -a -t httpd_sys_content_t "/var/www/$domain(/.*)" >/dev/null 2>&1 || true
           semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/$domain/wp-content(/.*)" >/dev/null 2>&1 || true
+          chcon -Rt httpd_sys_rw_content_t "/var/www/$domain" >/dev/null 2>&1 || true
           restorecon -Rv "/var/www/$domain" >/dev/null 2>&1 || true
      fi
 }

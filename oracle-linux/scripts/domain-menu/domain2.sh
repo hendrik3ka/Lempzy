@@ -124,6 +124,25 @@ if [ -e /var/www/$domain ]; then
     fi
 fi
 
+# Check if database already exists
+db_exists=""
+if command -v mysql >/dev/null 2>&1; then
+     db_exists=$(mysql -uroot -Nse "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'database_$domainClear2';" 2>/dev/null)
+fi
+
+if [ "$db_exists" = "database_$domainClear2" ]; then
+     read -p "Database database_$domainClear2 sudah ada, apakah anda ingin menghapus dan membuatnya ulang? (y/n): " recreate_db
+     if [[ $recreate_db =~ ^[Yy]$ ]]; then
+          mysql -uroot <<MYSQL_SCRIPT
+          DROP DATABASE IF EXISTS database_$domainClear2;
+          DROP USER IF EXISTS 'user_$domainClear2'@'localhost';
+MYSQL_SCRIPT
+     else
+          echo "Menggunakan database yang sudah ada. Setup dibatalkan agar kredensial tidak tertimpa."
+          exit
+     fi
+fi
+
 # Create Database
 create_database() {
      echo "Type the password for your new $domain database [eg, password123_$domainClear2]"
@@ -374,7 +393,7 @@ selinux_fix() {
                semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/$domain/wp-content(/.*)" >/dev/null 2>&1 || true
           fi
           chcon -R -t httpd_sys_content_t "/var/www/$domain" >/dev/null 2>&1 || true
-          chcon -R -t httpd_sys_rw_content_t "/var/www/$domain/wp-content" >/dev/null 2>&1 || true
+          chcon -Rt httpd_sys_rw_content_t "/var/www/$domain" >/dev/null 2>&1 || true
           restorecon -Rv "/var/www/$domain" >/dev/null 2>&1 || true
           if [ -S "/run/php-fpm/$domain-fpm.sock" ]; then
                chcon -t httpd_var_run_t "/run/php-fpm/$domain-fpm.sock" >/dev/null 2>&1 || true

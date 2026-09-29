@@ -45,7 +45,79 @@ sudo apt-get install git -y && apt-get install dos2unix -y && git clone --branch
 On Oracle Linux, use `dnf`. After cloning, copy the `oracle-linux` directory next to `Lempzy`, replace the original `Lempzy` directory with it, then run the setup script:
 
 ```
-sudo dnf install git dos2unix -y && git clone --branch main https://github.com/hendrik3ka/Lempzy.git && cp -a Lempzy/oracle-linux ./oracle-linux && rm -rf Lempzy && mv oracle-linux Lempzy && cd Lempzy && chmod +x lempzy-setup.sh && sudo ./lempzy-setup.sh
+sudo dnf install git dos2unix -y && git clone https://github.com/hendrik3ka/Lempzy.git && cp -a Lempzy/oracle-linux ./oracle-linux && rm -rf Lempzy && mv oracle-linux Lempzy && cd Lempzy && chmod +x lempzy-setup.sh && sudo ./lempzy-setup.sh
+```
+
+### Troubleshooting Oracle Linux: 502 Bad Gateway
+
+Jika setelah installasi Anda mengakses website dan mendapat **502 Bad Gateway** dari nginx, kemungkinan besar penyebabnya adalah **perbedaan user antara Nginx dan PHP-FPM**.
+Nginx memang berjalan menggunakan user `nginx`. Tetapi konfigurasi bawaan (default) PHP-FPM di Oracle Linux biasanya berjalan menggunakan user `apache`.
+
+**1. Cek user PHP-FPM**
+
+```bash
+sudo grep -E '^(user|group) =' /etc/php-fpm.d/www.conf
+```
+
+Jika outputnya adalah `user = apache` dan `group = apache`, maka inilah penyebab 502 Bad Gateway.
+
+**2. Samakan user PHP-FPM menjadi nginx**
+
+Buka konfigurasi PHP-FPM:
+
+```bash
+sudo nano /etc/php-fpm.d/www.conf
+```
+
+Cari baris `user = apache` dan `group = apache` (biasanya di sekitar baris 24), lalu ubah menjadi:
+
+```ini
+user = nginx
+group = nginx
+```
+
+Simpan file tersebut, lalu restart PHP-FPM:
+
+```bash
+sudo systemctl restart php-fpm
+```
+
+Sebagai alternatif, Anda bisa memaksa perubahan ini lewat satu perintah:
+
+```bash
+sudo sed -i 's/^user = apache/user = nginx/; s/^group = apache/group = nginx/' /etc/php-fpm.d/www.conf && sudo systemctl restart php-fpm
+```
+
+Setelah itu, muat ulang website Anda — 502 Bad Gateway seharusnya sudah hilang.
+
+### Troubleshooting: Gagal Menulis Sesi PHP (Permission Denied)
+
+Secara bawaan (default) di Oracle Linux, folder tempat PHP menyimpan data sesi pengunjung (`/var/lib/php/session`) dibuat dengan hak milik untuk user `apache`. Karena sekarang PHP-FPM Anda berjalan sebagai `nginx`, ia ditolak saat mencoba menulis file sesi (session) untuk login atau aktivitas plugin Anda.
+
+Solusinya mudah — Anda hanya perlu mengalihkan kepemilikan folder sesi (dan folder cache PHP lainnya) kepada user `nginx`. Jalankan perintah berikut:
+
+**1. Ubah kepemilikan folder sesi PHP**
+
+Agar `nginx` bisa menulis data sesi di dalamnya:
+
+```bash
+sudo chown -R nginx:nginx /var/lib/php/session
+```
+
+**2. Ubah kepemilikan folder cache (pencegahan)**
+
+Agar Anda tidak mendapati error "Permission denied" yang sama di masa depan saat PHP mencoba menggunakan OpCache atau WSDL cache, jalankan juga perintah ini (abaikan jika foldernya tidak ditemukan):
+
+```bash
+sudo chown -R nginx:nginx /var/lib/php/opcache /var/lib/php/wsdlcache 2>/dev/null || true
+```
+
+**3. Restart PHP-FPM**
+
+Muat ulang layanan PHP-FPM agar perubahan izin akses ini langsung diterapkan secara efektif:
+
+```bash
+sudo systemctl restart php-fpm
 ```
 
 ## Getting Started

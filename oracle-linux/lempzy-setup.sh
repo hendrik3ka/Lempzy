@@ -831,6 +831,9 @@ cp scripts/lempzy.sh /root
 dos2unix /root/lempzy.sh
 chmod +x /root/lempzy.sh
 
+# Permit PHP Outbound Connections in SELinux
+sudo setsebool -P httpd_can_network_connect 1
+
 # Success Prompt
 clear
 
