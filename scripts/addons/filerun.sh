@@ -47,7 +47,9 @@ detect_fpm_service() {
         echo "$found"
         return 0
     fi
-    return 1
+    # Not found: return empty but exit 0 so `set -e` doesn't kill the script
+    echo ""
+    return 0
 }
 
 FPM_SERVICE="$(detect_fpm_service)"
@@ -61,7 +63,7 @@ fpm_ctl() {
         echo "${yel}Warning: PHP-FPM service not found, skipping $action${end}"
         return 0
     fi
-    systemctl "$action" "$FPM_SERVICE"
+    systemctl "$action" "$FPM_SERVICE" || true
 }
 
 get_nginx_version() {
