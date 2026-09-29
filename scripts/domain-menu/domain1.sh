@@ -30,6 +30,41 @@ domainRegex="^[a-zA-Z0-9]"
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
+# Detect the correct PHP-FPM systemd unit (handles Remi/EPEL and distro naming).
+detect_fpm_service() {
+     local candidates
+     candidates="php$PHP_VERSION-fpm.service php-fpm.service php$PHP_VERSION-fpm php-fpm"
+     local c
+     for c in $candidates; do
+          if systemctl list-unit-files | grep -q "^$c"; then
+               echo "$c"
+               return 0
+          fi
+     done
+     # Last resort: any *fpm* unit
+     local found
+     found=$(systemctl list-unit-files 2>/dev/null | grep -i 'fpm.*\.service' | awk '{print $1}' | head -n1)
+     if [ -n "$found" ]; then
+          echo "$found"
+          return 0
+     fi
+     return 1
+}
+
+FPM_SERVICE="$(detect_fpm_service)"
+
+fpm_ctl() {
+     local action="$1"
+     if [ -z "$FPM_SERVICE" ]; then
+          FPM_SERVICE="$(detect_fpm_service)"
+     fi
+     if [ -z "$FPM_SERVICE" ]; then
+          echo "${yel}Warning: PHP-FPM service not found, skipping $action${end}"
+          return 0
+     fi
+     systemctl "$action" "$FPM_SERVICE"
+}
+
 get_nginx_version() {
      nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
 }
@@ -76,22 +111,50 @@ until [[ $domain =~ $domainRegex ]]; do
      read domain
 done
 
-# Check if domain already added
+domainClear=${domain//./}
+domainClear2=${domainClear//-/}
+
+# Check if nginx config already exists
 if [ -e $sitesAvailable$domain ]; then
-     echo "This domain already exists. Please delete your domain from the main menu options and try again"
-     exit
+     read -p "Nginx config untuk $domain sudah ada. Hapus dan buat ulang? (y/n): " recreate_nginx
+     if [[ $recreate_nginx =~ ^[Yy]$ ]]; then
+          rm -f $sitesAvailable$domain $sitesEnable$domain
+     else
+          echo "Menggunakan nginx config yang sudah ada."
+     fi
 fi
 
-# Check if domain already added var www
+# Check if web root already exists
 if [ -e /var/www/$domain ]; then
-     echo "This domain already exists. Please delete your domain from the main menu options and try again"
-     exit
+     read -p "Direktori /var/www/$domain sudah ada. Hapus dan buat ulang? (y/n): " recreate_webroot
+     if [[ $recreate_webroot =~ ^[Yy]$ ]]; then
+          rm -rf /var/www/$domain
+     else
+          echo "Menggunakan direktori web root yang sudah ada."
+     fi
+fi
+
+# Check if database already exists
+db_exists=""
+if command -v mysql >/dev/null 2>&1; then
+     db_exists=$(mysql -uroot -Nse "SHOW DATABASES LIKE 'database_$domainClear2';" 2>/dev/null)
+fi
+
+if [ "$db_exists" = "database_$domainClear2" ]; then
+     read -p "Database database_$domainClear2 sudah ada, apakah anda ingin menghapus dan membuatnya ulang? (y/n): " recreate_db
+     if [[ $recreate_db =~ ^[Yy]$ ]]; then
+          mysql -uroot <<MYSQL_SCRIPT
+          DROP DATABASE IF EXISTS database_$domainClear2;
+          DROP USER IF EXISTS 'user_$domainClear2'@'localhost';
+MYSQL_SCRIPT
+     else
+          echo "Menggunakan database yang sudah ada. Setup dibatalkan agar kredensial tidak tertimpa."
+          exit
+     fi
 fi
 
 # Create Database
 create_database() {
-     domainClear=${domain//./}
-     domainClear2=${domainClear//-/}
      echo "Type the password for your new $domain database [eg, password123_$domainClear2]"
      echo -n "followed by [ENTER]: "
      read PASS
@@ -206,7 +269,7 @@ add_html_file_test() {
      nginx -t
      systemctl reload nginx
      chown -R www-data:www-data /var/www/$domain
-     systemctl restart php$PHP_VERSION-fpm.service
+     fpm_ctl restart
      systemctl restart nginx
 
 }
@@ -248,7 +311,7 @@ setting_php_pool() {
      sed -i "s/phpX.X/php$PHP_VERSION/g" /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      echo "" >>/etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf
      dos2unix /etc/php/$PHP_VERSION/fpm/pool.d/$domain.conf >/dev/null 2>&1
-     service php$PHP_VERSION-fpm reload
+     fpm_ctl reload
 }
 
 # Create Symbolic Links
@@ -264,7 +327,7 @@ restart_services() {
      echo ""
      sleep 1
      systemctl restart nginx
-     systemctl restart php$PHP_VERSION-fpm.service
+     fpm_ctl restart
 
 }
 

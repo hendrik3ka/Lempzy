@@ -30,6 +30,44 @@ domainRegex="^[a-zA-Z0-9]"
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
+# Detect the actual PHP-FPM systemd unit name. On Oracle Linux + Remi the
+# service can be named php-fpm.service, php83-php-fpm.service, php8.3-fpm,
+# etc. We resolve it once and cache in FPM_SERVICE. Returns empty if not found.
+detect_fpm_service() {
+     local candidates
+     candidates="php$PHP_VERSION-fpm.service php-fpm.service php$PHP_VERSION-fpm php-fpm"
+     local c
+     for c in $candidates; do
+          if systemctl list-unit-files "$c" >/dev/null 2>&1 && systemctl list-unit-files | grep -q "^$c"; then
+               echo "$c"
+               return 0
+          fi
+     done
+     # Last resort: any *fpm* unit
+     local found
+     found=$(systemctl list-unit-files 2>/dev/null | grep -i 'fpm.*\.service' | awk '{print $1}' | head -n1)
+     if [ -n "$found" ]; then
+          echo "$found"
+          return 0
+     fi
+     return 1
+}
+
+FPM_SERVICE="$(detect_fpm_service)"
+
+# Restart/reload PHP-FPM using the detected unit. Safe no-op (with warning) if none.
+fpm_ctl() {
+     local action="$1"
+     if [ -z "$FPM_SERVICE" ]; then
+          FPM_SERVICE="$(detect_fpm_service)"
+     fi
+     if [ -z "$FPM_SERVICE" ]; then
+          echo "${yel}Warning: PHP-FPM service not found, skipping $action${end}"
+          return 0
+     fi
+     systemctl "$action" "$FPM_SERVICE"
+}
+
 # Ask the user to add domain name
 while true; do
     clear
@@ -258,11 +296,7 @@ install_nginx_cache() {
     cd
 
     chown -R nginx:nginx /var/www/$domain
-    if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
-        systemctl restart php$PHP_VERSION-fpm.service
-    else
-        systemctl restart php-fpm.service
-    fi
+    fpm_ctl restart
     systemctl restart nginx
 
     # Add Cache to the server
@@ -331,11 +365,7 @@ setting_php_pool() {
     sed -i "s/phpX.X/php$PHP_VERSION/g" "$POOL_DIR/$domain.conf"
     echo "" >>"$POOL_DIR/$domain.conf"
     dos2unix "$POOL_DIR/$domain.conf" >/dev/null 2>&1 || true
-    if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
-        systemctl reload php$PHP_VERSION-fpm.service
-    else
-        systemctl reload php-fpm.service
-    fi
+    fpm_ctl reload
 
 }
 
@@ -360,11 +390,7 @@ restart_services() {
     echo ""
     sleep 1
     systemctl restart nginx
-    if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
-        systemctl restart php$PHP_VERSION-fpm.service
-    else
-        systemctl restart php-fpm.service
-    fi
+    fpm_ctl restart
 
 }
 

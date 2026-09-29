@@ -30,6 +30,40 @@ domainRegex="^[a-zA-Z0-9]"
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
+# Detect the correct PHP-FPM systemd unit (handles Remi/EPEL and distro naming).
+detect_fpm_service() {
+     local candidates
+     candidates="php$PHP_VERSION-fpm.service php-fpm.service php$PHP_VERSION-fpm php-fpm"
+     local c
+     for c in $candidates; do
+          if systemctl list-unit-files | grep -q "^$c"; then
+               echo "$c"
+               return 0
+          fi
+     done
+     local found
+     found=$(systemctl list-unit-files 2>/dev/null | grep -i 'fpm.*\.service' | awk '{print $1}' | head -n1)
+     if [ -n "$found" ]; then
+          echo "$found"
+          return 0
+     fi
+     return 1
+}
+
+FPM_SERVICE="$(detect_fpm_service)"
+
+fpm_ctl() {
+     local action="$1"
+     if [ -z "$FPM_SERVICE" ]; then
+          FPM_SERVICE="$(detect_fpm_service)"
+     fi
+     if [ -z "$FPM_SERVICE" ]; then
+          echo "${yel}Warning: PHP-FPM service not found, skipping $action${end}"
+          return 0
+     fi
+     systemctl "$action" "$FPM_SERVICE"
+}
+
 get_nginx_version() {
      nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9.]\+\).*|\1|p'
 }
@@ -169,7 +203,7 @@ restart_service() {
      echo ""
      sleep 1
      systemctl restart nginx
-     systemctl restart php$PHP_VERSION-fpm.service
+     fpm_ctl restart
 }
 
 # Run

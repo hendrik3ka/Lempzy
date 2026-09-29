@@ -17,6 +17,40 @@ end=$'\e[0m'
 # Get PHP Installed Version
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 
+# Detect the correct PHP-FPM systemd unit (handles Remi/EPEL and distro naming).
+detect_fpm_service() {
+  local candidates
+  candidates="php$PHP_VERSION-fpm.service php-fpm.service php$PHP_VERSION-fpm php-fpm"
+  local c
+  for c in $candidates; do
+    if systemctl list-unit-files | grep -q "^$c"; then
+      echo "$c"
+      return 0
+    fi
+  done
+  local found
+  found=$(systemctl list-unit-files 2>/dev/null | grep -i 'fpm.*\.service' | awk '{print $1}' | head -n1)
+  if [ -n "$found" ]; then
+    echo "$found"
+    return 0
+  fi
+  return 1
+}
+
+FPM_SERVICE="$(detect_fpm_service)"
+
+fpm_ctl() {
+  local action="$1"
+  if [ -z "$FPM_SERVICE" ]; then
+    FPM_SERVICE="$(detect_fpm_service)"
+  fi
+  if [ -z "$FPM_SERVICE" ]; then
+    echo "Warning: PHP-FPM service not found, skipping $action"
+    return 0
+  fi
+  systemctl "$action" "$FPM_SERVICE"
+}
+
 main_menu() {
   NORMAL=$(echo "\033[m")
   MENU=$(echo "\033[36m")   #Blue
@@ -132,11 +166,7 @@ main_menu() {
 
       8)
         clear
-        if systemctl list-unit-files | grep -q "php$PHP_VERSION-fpm.service"; then
-          systemctl restart php$PHP_VERSION-fpm.service
-        else
-          systemctl restart php-fpm.service
-        fi
+        fpm_ctl restart
         systemctl restart nginx
         echo "${cyn}Server Refreshed!${end}"
         read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
