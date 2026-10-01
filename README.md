@@ -50,63 +50,64 @@ sudo dnf install git dos2unix -y && git clone https://github.com/hendrik3ka/Lemp
 
 ### Troubleshooting Oracle Linux: 502 Bad Gateway
 
-Jika setelah installasi Anda mengakses website dan mendapat **502 Bad Gateway** dari nginx, kemungkinan besar penyebabnya adalah **perbedaan user antara Nginx dan PHP-FPM**.
-Nginx memang berjalan menggunakan user `nginx`. Tetapi konfigurasi bawaan (default) PHP-FPM di Oracle Linux biasanya berjalan menggunakan user `apache`.
+If after installation you access your website and get a **502 Bad Gateway** error from nginx, the most likely cause is a **user mismatch between Nginx and PHP-FPM**.
 
-**1. Cek user PHP-FPM**
+Nginx runs as the `nginx` user. However, the default PHP-FPM configuration on Oracle Linux usually runs as the `apache` user.
+
+**1. Check the PHP-FPM user**
 
 ```bash
 sudo grep -E '^(user|group) =' /etc/php-fpm.d/www.conf
 ```
 
-Jika outputnya adalah `user = apache` dan `group = apache`, maka inilah penyebab 502 Bad Gateway.
+If the output shows `user = apache` and `group = apache`, this is the cause of the 502 Bad Gateway.
 
-**2. Samakan user PHP-FPM menjadi nginx**
+**2. Match the PHP-FPM user to nginx**
 
-Buka konfigurasi PHP-FPM:
+Open the PHP-FPM configuration:
 
 ```bash
 sudo nano /etc/php-fpm.d/www.conf
 ```
 
-Cari baris `user = apache` dan `group = apache` (biasanya di sekitar baris 24), lalu ubah menjadi:
+Find the lines `user = apache` and `group = apache` (usually around line 24), then change them to:
 
 ```ini
 user = nginx
 group = nginx
 ```
 
-Simpan file tersebut, lalu restart PHP-FPM:
+Save the file, then restart PHP-FPM:
 
 ```bash
 sudo systemctl restart php-fpm
 ```
 
-Sebagai alternatif, Anda bisa memaksa perubahan ini lewat satu perintah:
+Alternatively, you can force this change with a single command:
 
 ```bash
 sudo sed -i 's/^user = apache/user = nginx/; s/^group = apache/group = nginx/' /etc/php-fpm.d/www.conf && sudo systemctl restart php-fpm
 ```
 
-Setelah itu, muat ulang website Anda — 502 Bad Gateway seharusnya sudah hilang.
+After that, reload your website — the 502 Bad Gateway should be gone.
 
-### Troubleshooting: Gagal Menulis Sesi PHP (Permission Denied)
+### Troubleshooting: Failed to Write PHP Session (Permission Denied)
 
-Secara bawaan (default) di Oracle Linux, folder tempat PHP menyimpan data sesi pengunjung (`/var/lib/php/session`) dibuat dengan hak milik untuk user `apache`. Karena sekarang PHP-FPM Anda berjalan sebagai `nginx`, ia ditolak saat mencoba menulis file sesi (session) untuk login atau aktivitas plugin Anda.
+By default on Oracle Linux, the directory where PHP stores visitor session data (`/var/lib/php/session`) is owned by the `apache` user. Since PHP-FPM is now running as `nginx`, it gets denied when trying to write session files for logins or plugin activity.
 
-Solusinya mudah — Anda hanya perlu mengalihkan kepemilikan folder sesi (dan folder cache PHP lainnya) kepada user `nginx`. Jalankan perintah berikut:
+The fix is simple — you only need to transfer ownership of the session directory (and other PHP cache directories) to the `nginx` user. Run the following commands:
 
-**1. Ubah kepemilikan folder sesi PHP**
+**1. Change ownership of the PHP session directory**
 
-Agar `nginx` bisa menulis data sesi di dalamnya:
+So `nginx` can write session data inside it:
 
 ```bash
 sudo chown -R nginx:nginx /var/lib/php/session
 ```
 
-**2. Ubah kepemilikan folder cache (pencegahan)**
+**2. Change ownership of cache directories (prevention)**
 
-Agar Anda tidak mendapati error "Permission denied" yang sama di masa depan saat PHP mencoba menggunakan OpCache atau WSDL cache, jalankan juga perintah ini (abaikan jika foldernya tidak ditemukan):
+To avoid the same "Permission denied" error in the future when PHP tries to use OpCache or WSDL cache, also run this command (ignore if the directories are not found):
 
 ```bash
 sudo chown -R nginx:nginx /var/lib/php/opcache /var/lib/php/wsdlcache 2>/dev/null || true
@@ -114,7 +115,7 @@ sudo chown -R nginx:nginx /var/lib/php/opcache /var/lib/php/wsdlcache 2>/dev/nul
 
 **3. Restart PHP-FPM**
 
-Muat ulang layanan PHP-FPM agar perubahan izin akses ini langsung diterapkan secara efektif:
+Reload the PHP-FPM service so the permission changes take effect immediately:
 
 ```bash
 sudo systemctl restart php-fpm
