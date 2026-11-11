@@ -55,9 +55,11 @@ main_menu() {
   echo "  11) MIGRATE"
   echo "  12) IPv6 CONFIGURATION"
   echo "  13) UPDATE LEMPZY"
-  echo "  ${grn}14) EXIT MENU${end}"
+  echo "  14) EXPORT WEBSITE"
+  echo "  15) IMPORT WEBSITE"
+  echo "  ${grn}16) EXIT MENU${end}"
   echo ""
-  read -p "Choose your option [1-14]: " choice
+  read -p "Choose your option [1-16]: " choice
 
   while [ choice != '' ]; do
     if [[ $choice = "" ]]; then
@@ -277,6 +279,34 @@ main_menu() {
         ;;
 
       14)
+        # Export Website
+        clear
+        EXPORT_SCRIPT=/root/Lempzy/scripts/migrate.sh
+        if test -f "$EXPORT_SCRIPT"; then
+          source $EXPORT_SCRIPT --export
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find migration script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      15)
+        # Import Website
+        clear
+        IMPORT_SCRIPT=/root/Lempzy/scripts/migrate.sh
+        if test -f "$IMPORT_SCRIPT"; then
+          source $IMPORT_SCRIPT --import
+          cd && cd Lempzy
+        else
+          echo "${red}Cannot find migration script${end}"
+        fi
+        read -p "${grn}Press [Enter] key to continue...${end}" readEnterKey
+        main_menu
+        ;;
+
+      16)
         clear
         echo "Bye!"
         echo "You can open the Main Menu by typing ${grn}./lempzy.sh${end}"
