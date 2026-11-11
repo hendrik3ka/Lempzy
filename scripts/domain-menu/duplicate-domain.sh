@@ -218,7 +218,7 @@ if [[ $is_wordpress == true ]]; then
     wp_cmd=(wp --path="$target_root" --allow-root --skip-plugins --skip-themes)
     "${wp_cmd[@]}" config set DB_NAME "$target_db"
     "${wp_cmd[@]}" config set DB_USER "$target_user"
-    printf '%s\n' "$db_password" | "${wp_cmd[@]}" config set DB_PASSWORD --prompt=value
+    printf '%s' "$db_password" | php "$(dirname -- "${BASH_SOURCE[0]}")/set-wp-db-password.php" "$target_root/wp-config.php"
     "${wp_cmd[@]}" config set DB_HOST localhost
     "${wp_cmd[@]}" search-replace "$source_domain" "$target" --all-tables --precise
     # WP_HOME dan WP_SITEURL juga dapat ditetapkan langsung di konfigurasi.
